@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { Canje, EstadoCanje } from './entities/canje.entity';
 import { Estudiante } from '../estudiantes/entities/estudiante.entity';
 import { Premio } from '../premios/entities/premio.entity';
-import { HistorialPuntos, TipoTransaccion } from '../historial/entities/historial-puntos.entity';
+import { HistorialPuntos, TipoTransaccion } from '../puntos/entities/historial-puntos.entity';
 import { CreateCanjeDto } from './dto/create-canje.dto';
 
 @Injectable()

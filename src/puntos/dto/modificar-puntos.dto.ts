@@ -1,5 +1,5 @@
 import { IsUUID, IsInt, IsOptional, IsString, IsEnum, Min } from 'class-validator';
-import { TipoTransaccion } from '../../historial/entities/historial-puntos.entity';
+import { TipoTransaccion } from '../entities/historial-puntos.entity';
 
 export class ModificarPuntosDto {
   @IsUUID()

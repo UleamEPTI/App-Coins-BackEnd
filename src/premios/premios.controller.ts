@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, ParseUUIDPipe, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PremiosService } from './premios.service';
 import { CreatePremioDto } from './dto/create-premio.dto';
 
+@UseGuards(JwtAuthGuard)
 @Controller('premios')
 export class PremiosController {
   constructor(private readonly premiosService: PremiosService) {}

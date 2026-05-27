@@ -1,8 +1,10 @@
-import { Controller, Post, Get, Put, Body, Param, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Post, Get, Put, Body, Param, ParseUUIDPipe, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CanjesService } from './canjes.service';
 import { CreateCanjeDto } from './dto/create-canje.dto';
 import { EstadoCanje } from './entities/canje.entity';
 
+@UseGuards(JwtAuthGuard)
 @Controller('canjes')
 export class CanjesController {
   constructor(private readonly canjesService: CanjesService) {}

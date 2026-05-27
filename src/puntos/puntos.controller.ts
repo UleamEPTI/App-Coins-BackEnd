@@ -1,7 +1,9 @@
-import { Controller, Post, Get, Body, Param, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, ParseUUIDPipe, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PuntosService } from './puntos.service';
 import { ModificarPuntosDto } from './dto/modificar-puntos.dto';
 
+@UseGuards(JwtAuthGuard)
 @Controller('puntos')
 export class PuntosController {
   constructor(private readonly puntosService: PuntosService) {}

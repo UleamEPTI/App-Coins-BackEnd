@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { HistorialPuntos, TipoTransaccion } from '../historial/entities/historial-puntos.entity';
+import { HistorialPuntos, TipoTransaccion } from '../puntos/entities/historial-puntos.entity';
 import { Estudiante } from '../estudiantes/entities/estudiante.entity';
 import { ModificarPuntosDto } from './dto/modificar-puntos.dto';
 

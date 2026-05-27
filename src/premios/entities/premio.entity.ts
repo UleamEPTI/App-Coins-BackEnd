@@ -11,10 +11,10 @@ export class Premio {
   @Column({ nullable: true })
   descripcion: string;
 
-  @Column({ name: 'imagen_url', nullable: true }) // Mapeado correctamente a la columna física de la BD
+  @Column({ nullable: true })
   imagen: string;
 
-  @Column({ name: 'puntos_requeridos' }) // Traduce 'costo_puntos' en el código a 'puntos_requeridos' en Postgres
+  @Column({ name: 'costo_puntos' })
   costo_puntos: number;
 
   @Column({ default: 0 })

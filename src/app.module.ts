@@ -7,6 +7,11 @@ import { EstudiantesModule } from './estudiantes/estudiantes.module';
 import { PremiosModule } from './premios/premios.module';
 import { PuntosModule } from './puntos/puntos.module';
 import { CanjesModule } from './canjes/canjes.module';
+import { InstitucionesModule } from './instituciones/instituciones.module';
+import { EstadisticasModule } from './estadisticas/estadisticas.module';
+import { AuditoriaModule } from './auditoria/auditoria.module';
+import { TiposBotellaModule } from './tipos-botella/tipos-botella.module';
+import { ReciclajesModule } from './reciclajes/reciclajes.module';
 
 @Module({
   imports: [
@@ -31,6 +36,11 @@ import { CanjesModule } from './canjes/canjes.module';
     PremiosModule,
     PuntosModule,
     CanjesModule,
+    InstitucionesModule,
+    EstadisticasModule,
+    AuditoriaModule,
+    TiposBotellaModule,
+    ReciclajesModule,
   ],
 })
 export class AppModule {}

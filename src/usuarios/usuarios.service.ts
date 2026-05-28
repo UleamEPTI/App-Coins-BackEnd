@@ -45,6 +45,13 @@ export class UsuariosService {
     });
   }
 
+  async findByInstitucion(institucion_id: string) {
+    return this.usuarioRepository.find({
+      where: { institucion_id },
+      relations: ['rol'],
+    });
+  }
+
   async create(dto: CreateUsuarioDto) {
     const existe = await this.usuarioRepository.findOne({ where: { email: dto.email } });
     if (existe) throw new ConflictException('El email ya está registrado');
@@ -61,7 +68,9 @@ export class UsuariosService {
       cedula: dto.cedula,
       telefono: dto.telefono,
       password_hash: hash,
-      rol: rol,
+      rol,
+      institucion_id: dto.institucion_id,
+      curso_id: dto.curso_id,
       activo: true,
     });
 
@@ -80,6 +89,8 @@ export class UsuariosService {
     if (dto.apellidos) usuario.apellidos = dto.apellidos;
     if (dto.cedula) usuario.cedula = dto.cedula;
     if (dto.telefono) usuario.telefono = dto.telefono;
+    if (dto.institucion_id) usuario.institucion_id = dto.institucion_id;
+    if (dto.curso_id) usuario.curso_id = dto.curso_id;
 
     const saved = await this.usuarioRepository.save(usuario);
     const { password_hash, ...result } = saved;
@@ -96,4 +107,4 @@ export class UsuariosService {
   async getRoles() {
     return this.rolRepository.find();
   }
-}
+} 

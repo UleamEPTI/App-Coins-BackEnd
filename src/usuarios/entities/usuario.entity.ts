@@ -31,6 +31,12 @@ export class Usuario {
   @Column({ nullable: true })
   foto_perfil: string;
 
+  @Column({ nullable: true, name: 'institucion_id' })
+  institucion_id: string;
+
+  @Column({ nullable: true, name: 'curso_id' })
+  curso_id: string;
+
   @Column({ default: true })
   activo: boolean;
 
@@ -39,5 +45,4 @@ export class Usuario {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updated_at: Date;
-  
 }

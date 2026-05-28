@@ -1,4 +1,4 @@
-import { IsEmail, IsString, IsUUID, IsOptional, MinLength } from 'class-validator';
+import { IsString, IsEmail, IsOptional, IsUUID } from 'class-validator';
 
 export class CreateUsuarioDto {
   @IsUUID()
@@ -10,13 +10,6 @@ export class CreateUsuarioDto {
   @IsString()
   apellidos: string;
 
-  @IsEmail()
-  email: string;
-
-  @IsString()
-  @MinLength(6)
-  password: string;
-
   @IsOptional()
   @IsString()
   cedula?: string;
@@ -24,4 +17,18 @@ export class CreateUsuarioDto {
   @IsOptional()
   @IsString()
   telefono?: string;
+
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  password: string;
+
+  @IsOptional()
+  @IsUUID()
+  institucion_id?: string;
+
+  @IsOptional()
+  @IsUUID()
+  curso_id?: string;
 }

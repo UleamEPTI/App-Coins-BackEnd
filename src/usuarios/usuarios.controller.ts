@@ -10,44 +10,38 @@ import { Roles } from '../auth/decorators/roles.decorator';
 export class UsuariosController {
   constructor(private readonly usuariosService: UsuariosService) {}
 
-  // Solo ADMIN puede ver todos los usuarios
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'INSTITUCION')
   @Get()
   findAll() {
     return this.usuariosService.findAll();
   }
 
-  // Todos los roles pueden ver los roles disponibles
   @Get('roles')
   getRoles() {
     return this.usuariosService.getRoles();
   }
 
-  // ADMIN y DOCENTE pueden ver un usuario
-  @Roles('ADMIN', 'DOCENTE')
+  @Roles('ADMIN', 'INSTITUCION', 'DOCENTE')
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.usuariosService.findOne(id);
   }
 
-  // Solo ADMIN puede crear usuarios
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'INSTITUCION')
   @Post()
   create(@Body() dto: CreateUsuarioDto) {
     return this.usuariosService.create(dto);
   }
 
-  // Solo ADMIN puede editar usuarios
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'INSTITUCION')
   @Put(':id')
   update(@Param('id') id: string, @Body() dto: Partial<CreateUsuarioDto>) {
     return this.usuariosService.update(id, dto);
   }
 
-  // Solo ADMIN puede eliminar usuarios
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'INSTITUCION')
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.usuariosService.remove(id);
   }
-}
+} 

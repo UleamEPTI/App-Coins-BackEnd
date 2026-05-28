@@ -6,9 +6,13 @@ import { Premio } from '../premios/entities/premio.entity';
 import { HistorialPuntos } from '../puntos/entities/historial-puntos.entity';
 import { CanjesService } from './canjes.service';
 import { CanjesController } from './canjes.controller';
+import { AuditoriaModule } from '../auditoria/auditoria.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Canje, Estudiante, Premio, HistorialPuntos])],
+  imports: [
+    TypeOrmModule.forFeature([Canje, Estudiante, Premio, HistorialPuntos]),
+    AuditoriaModule,
+  ],
   providers: [CanjesService],
   controllers: [CanjesController],
 })

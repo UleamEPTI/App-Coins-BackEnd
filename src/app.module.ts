@@ -12,6 +12,7 @@ import { EstadisticasModule } from './estadisticas/estadisticas.module';
 import { AuditoriaModule } from './auditoria/auditoria.module';
 import { TiposBotellaModule } from './tipos-botella/tipos-botella.module';
 import { ReciclajesModule } from './reciclajes/reciclajes.module';
+import { ReportesModule } from './reportes/reportes.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { ReciclajesModule } from './reciclajes/reciclajes.module';
     AuditoriaModule,
     TiposBotellaModule,
     ReciclajesModule,
+    ReportesModule,
   ],
 })
 export class AppModule {}

@@ -14,26 +14,20 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     const { email, password } = loginDto;
 
-    // 1. Buscar usuario por email
     const usuario = await this.usuariosService.findByEmail(email);
-
     if (!usuario) {
       throw new UnauthorizedException('Credenciales incorrectas');
     }
 
-    // 2. Verificar que está activo
     if (!usuario.activo) {
       throw new UnauthorizedException('Usuario inactivo');
     }
 
-    // 3. Verificar contraseña
     const passwordValida = await bcrypt.compare(password, usuario.password_hash);
-
     if (!passwordValida) {
       throw new UnauthorizedException('Credenciales incorrectas');
     }
 
-    // 4. Generar token JWT
     const payload = {
       sub: usuario.id,
       email: usuario.email,
@@ -64,6 +58,30 @@ export class AuthService {
       email: usuario.email,
       rol: usuario.rol.nombre,
       activo: usuario.activo,
+    };
+  }
+
+  async refreshToken(userId: string) {
+    const usuario = await this.usuariosService.findById(userId);
+    if (!usuario || !usuario.activo) {
+      throw new UnauthorizedException('Usuario no válido');
+    }
+
+    const payload = {
+      sub: usuario.id,
+      email: usuario.email,
+      rol: usuario.rol.nombre,
+    };
+
+    return {
+      access_token: this.jwtService.sign(payload),
+      usuario: {
+        id: usuario.id,
+        nombres: usuario.nombres,
+        apellidos: usuario.apellidos,
+        email: usuario.email,
+        rol: usuario.rol.nombre,
+      },
     };
   }
 }

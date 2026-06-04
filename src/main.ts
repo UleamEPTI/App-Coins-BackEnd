@@ -1,10 +1,23 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import helmet from 'helmet';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: ['error', 'warn', 'log', 'debug'],
+  });
+
+  // Helmet - headers de seguridad HTTP
+  app.use(helmet());
+
+  // CORS
+  app.enableCors({
+    origin: ['http://localhost:3000', 'http://localhost:19000', '*'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  });
 
   app.setGlobalPrefix('api');
 
@@ -25,8 +38,9 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  await app.listen(3000);
-  console.log('🚀 Servidor corriendo en http://localhost:3000/api');
-  console.log('📚 Documentación en http://localhost:3000/api/docs');
+  const port = process.env.PORT ?? 3000;
+  await app.listen(port);
+  Logger.log(`🚀 Servidor corriendo en http://localhost:${port}/api`);
+  Logger.log(`📚 Documentación en http://localhost:${port}/api/docs`);
 }
 bootstrap();

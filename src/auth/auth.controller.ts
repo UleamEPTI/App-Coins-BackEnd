@@ -1,22 +1,33 @@
-import { Controller, Post, Body, Get, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards, Request } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-import { AuthGuard } from '@nestjs/passport';
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  // POST /api/auth/login
   @Post('login')
+  @ApiOperation({ summary: 'Iniciar sesión' })
   login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
   }
 
-  // GET /api/auth/profile  (requiere token)
   @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
   @Get('profile')
+  @ApiOperation({ summary: 'Ver perfil del usuario autenticado' })
   getProfile(@Request() req: any) {
     return this.authService.getProfile(req.user.id);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @Get('refresh')
+  @ApiOperation({ summary: 'Renovar token JWT' })
+  refresh(@Request() req: any) {
+    return this.authService.refreshToken(req.user.id);
   }
 }

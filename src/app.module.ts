@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
+import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module';
 import { UsuariosModule } from './usuarios/usuarios.module';
 import { EstudiantesModule } from './estudiantes/estudiantes.module';
@@ -13,10 +16,16 @@ import { AuditoriaModule } from './auditoria/auditoria.module';
 import { TiposBotellaModule } from './tipos-botella/tipos-botella.module';
 import { ReciclajesModule } from './reciclajes/reciclajes.module';
 import { ReportesModule } from './reportes/reportes.module';
+import { BackupModule } from './backup/backup.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ThrottlerModule.forRoot([{
+      ttl: 60000,
+      limit: 100,
+    }]),
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -43,6 +52,13 @@ import { ReportesModule } from './reportes/reportes.module';
     TiposBotellaModule,
     ReciclajesModule,
     ReportesModule,
+    BackupModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}

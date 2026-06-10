@@ -91,6 +91,7 @@ export class UsuariosService {
     if (dto.telefono) usuario.telefono = dto.telefono;
     if (dto.institucion_id) usuario.institucion_id = dto.institucion_id;
     if (dto.curso_id) usuario.curso_id = dto.curso_id;
+    if (dto.materia !== undefined) usuario.materia = dto.materia;
 
     const saved = await this.usuarioRepository.save(usuario);
     const { password_hash, ...result } = saved;

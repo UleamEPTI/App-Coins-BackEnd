@@ -16,4 +16,7 @@ export class Institucion {
 
   @CreateDateColumn({ name: 'created_at' })
   created_at: Date;
+
+  @Column({ nullable: true })
+  dominio: string;
 }

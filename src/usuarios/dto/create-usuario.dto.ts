@@ -24,7 +24,7 @@ export class CreateUsuarioDto {
   @IsString()
   telefono?: string;
 
-  @ApiProperty({ example: 'juan@correo.com' })
+  @ApiProperty({ example: 'juan@bachillero.gob.ec' })
   @IsEmail()
   email: string;
 
@@ -41,4 +41,9 @@ export class CreateUsuarioDto {
   @IsOptional()
   @IsUUID()
   curso_id?: string;
+
+  @ApiProperty({ example: 'Matemáticas', required: false, description: 'Solo para docentes' })
+  @IsOptional()
+  @IsString()
+  materia?: string;
 }

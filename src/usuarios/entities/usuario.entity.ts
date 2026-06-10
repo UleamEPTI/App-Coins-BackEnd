@@ -40,6 +40,9 @@ export class Usuario {
   @Column({ default: true })
   activo: boolean;
 
+  @Column({ nullable: true })
+  materia: string;
+
   @CreateDateColumn({ name: 'created_at' })
   created_at: Date;
 

@@ -10,6 +10,11 @@ export class CreateInstitucionDto {
   @IsString()
   codigo: string;
 
+  @ApiProperty({ example: '@bachillero.gob.ec', required: false })
+  @IsOptional()
+  @IsString()
+  dominio?: string;
+
   @ApiProperty({ example: true, required: false })
   @IsOptional()
   @IsBoolean()

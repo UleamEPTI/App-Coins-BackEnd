@@ -17,6 +17,8 @@ import { TiposBotellaModule } from './tipos-botella/tipos-botella.module';
 import { ReciclajesModule } from './reciclajes/reciclajes.module';
 import { ReportesModule } from './reportes/reportes.module';
 import { BackupModule } from './backup/backup.module';
+import { SolicitudesPasswordModule } from './solicitudes-password/solicitudes-password.module';
+
 
 @Module({
   imports: [
@@ -53,6 +55,7 @@ import { BackupModule } from './backup/backup.module';
     ReciclajesModule,
     ReportesModule,
     BackupModule,
+    SolicitudesPasswordModule,
   ],
   providers: [
     {

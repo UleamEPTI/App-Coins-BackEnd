@@ -1,0 +1,294 @@
+{
+  "metadata": {
+    "fecha": "2026-06-15T23:55:26.630Z",
+    "tipo": "manual",
+    "version": "1.0"
+  },
+  "roles": [
+    {
+      "id": "c2a5774e-74f6-4cce-87ed-c3044b686572",
+      "nombre": "ADMIN",
+      "descripcion": "Administrador del sistema",
+      "created_at": "2026-05-14T18:22:37.559Z"
+    },
+    {
+      "id": "ce975e43-6024-4466-b48d-2f283cafe544",
+      "nombre": "DOCENTE",
+      "descripcion": "Profesor o encargado",
+      "created_at": "2026-05-14T18:22:37.559Z"
+    },
+    {
+      "id": "2fe9a64c-17a8-466b-a3e8-b4d4777e6e5c",
+      "nombre": "ESTUDIANTE",
+      "descripcion": "Alumno del sistema",
+      "created_at": "2026-05-14T18:22:37.559Z"
+    },
+    {
+      "id": "4468af36-04c2-4574-a86a-7e2d8013290d",
+      "nombre": "INSTITUCION",
+      "descripcion": null,
+      "created_at": "2026-05-27T20:53:26.207Z"
+    }
+  ],
+  "instituciones": [
+    {
+      "id": "c380e2b4-9506-4f5d-8e93-5a9a71debc9b",
+      "nombre": "Unidad Educativa San José",
+      "codigo": "UESJ-001",
+      "activo": true,
+      "created_at": "2026-05-28T20:57:04.160Z",
+      "dominio": null
+    }
+  ],
+  "usuarios": [
+    {
+      "id": "1acdfaca-8c81-4391-83fa-39996ec4d7fb",
+      "rol_id": "c2a5774e-74f6-4cce-87ed-c3044b686572",
+      "nombres": "Andres",
+      "apellidos": "Ramirez",
+      "cedula": "1234567890",
+      "telefono": null,
+      "email": "juan@test.com",
+      "password_hash": "hash123",
+      "foto_perfil": null,
+      "activo": true,
+      "created_at": "2026-05-18T17:43:53.779Z",
+      "updated_at": "2026-05-18T17:43:53.779Z",
+      "institucion_id": null,
+      "curso_id": null,
+      "materia": null
+    },
+    {
+      "id": "c1c4e8a9-56d0-456d-82a3-fe5fc6d3bd54",
+      "rol_id": "2fe9a64c-17a8-466b-a3e8-b4d4777e6e5c",
+      "nombres": "Andres",
+      "apellidos": "Ramirez",
+      "cedula": "0912345678",
+      "telefono": null,
+      "email": "andres@test.com",
+      "password_hash": "$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
+      "foto_perfil": null,
+      "activo": true,
+      "created_at": "2026-05-18T17:46:05.059Z",
+      "updated_at": "2026-05-27T20:03:27.155Z",
+      "institucion_id": null,
+      "curso_id": null,
+      "materia": null
+    },
+    {
+      "id": "9402cf11-041d-4b20-a463-37abbd331bcd",
+      "rol_id": "c2a5774e-74f6-4cce-87ed-c3044b686572",
+      "nombres": "Admin",
+      "apellidos": "Sistema",
+      "cedula": null,
+      "telefono": null,
+      "email": "admin@bachillero.com",
+      "password_hash": "$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
+      "foto_perfil": null,
+      "activo": true,
+      "created_at": "2026-05-28T20:45:28.447Z",
+      "updated_at": "2026-05-28T20:45:28.447Z",
+      "institucion_id": null,
+      "curso_id": null,
+      "materia": null
+    }
+  ],
+  "cursos": [
+    {
+      "id": "191fbfa5-dca8-4dc5-b819-86281f8ffa41",
+      "nombre": "Primero BGU",
+      "paralelo": "A",
+      "descripcion": "Primer año bachillerato",
+      "activo": true,
+      "created_at": "2026-05-18T17:39:27.130Z",
+      "institucion_id": "c380e2b4-9506-4f5d-8e93-5a9a71debc9b"
+    }
+  ],
+  "estudiantes": [
+    {
+      "id": "18fbec2c-a653-43bf-af76-a4f7b3df049e",
+      "usuario_id": "1acdfaca-8c81-4391-83fa-39996ec4d7fb",
+      "curso_id": "191fbfa5-dca8-4dc5-b819-86281f8ffa41",
+      "codigo_estudiante": "EST-001",
+      "puntos": 968,
+      "fecha_nacimiento": "2005-03-14T05:00:00.000Z",
+      "direccion": "Av. Principal 123",
+      "activo": true,
+      "created_at": "2026-05-18T17:46:54.193Z",
+      "updated_at": "2026-05-28T21:15:30.633Z"
+    }
+  ],
+  "premios": [
+    {
+      "id": "de87c0ab-aed2-4c78-bcc6-3484778150e0",
+      "nombre": "Camiseta Bachillero",
+      "descripcion": "Camiseta oficial",
+      "costo_puntos": 150,
+      "stock": 10,
+      "imagen": null,
+      "activo": true,
+      "created_at": "2026-05-27T19:26:06.794Z",
+      "updated_at": "2026-05-27T19:26:06.794Z"
+    },
+    {
+      "id": "a236a824-40e3-42c3-bdee-be5c724b2e54",
+      "nombre": "Termo de Agua",
+      "descripcion": "Termo metálico insulado",
+      "costo_puntos": 100,
+      "stock": 5,
+      "imagen": null,
+      "activo": true,
+      "created_at": "2026-05-27T19:26:06.794Z",
+      "updated_at": "2026-05-27T19:26:06.794Z"
+    },
+    {
+      "id": "51681661-6dba-44e3-905c-aa4f802800bd",
+      "nombre": "Stickers Pack",
+      "descripcion": "Stickers para laptop",
+      "costo_puntos": 20,
+      "stock": 48,
+      "imagen": null,
+      "activo": true,
+      "created_at": "2026-05-27T19:26:06.794Z",
+      "updated_at": "2026-05-27T19:43:27.673Z"
+    }
+  ],
+  "tipos_botella": [
+    {
+      "id": "d88a74e8-b72c-437c-8118-2fafc28d17ae",
+      "institucion_id": "c380e2b4-9506-4f5d-8e93-5a9a71debc9b",
+      "tamano": "100ml",
+      "puntos": 1,
+      "activo": true,
+      "created_at": "2026-05-28T21:07:13.330Z"
+    },
+    {
+      "id": "d2d42c52-2cf6-4ea2-a3ad-8f15aa5bba0e",
+      "institucion_id": "c380e2b4-9506-4f5d-8e93-5a9a71debc9b",
+      "tamano": "300ml",
+      "puntos": 3,
+      "activo": true,
+      "created_at": "2026-05-28T21:07:38.011Z"
+    },
+    {
+      "id": "c25f7b57-9f44-4f0b-b572-8bc5be2d86d1",
+      "institucion_id": "c380e2b4-9506-4f5d-8e93-5a9a71debc9b",
+      "tamano": "500ml",
+      "puntos": 5,
+      "activo": true,
+      "created_at": "2026-05-28T21:07:44.944Z"
+    }
+  ],
+  "historial_puntos": [
+    {
+      "id": "8ae95326-cf77-4564-9b90-6dc3d073f748",
+      "estudiante_id": "18fbec2c-a653-43bf-af76-a4f7b3df049e",
+      "puntos": 200,
+      "tipo": "SUMA",
+      "descripcion": "Excelente desempeño en clase",
+      "created_at": "2026-05-27T19:36:05.126Z"
+    },
+    {
+      "id": "acbebce8-12a6-446f-b88f-18d21eeeac85",
+      "estudiante_id": "18fbec2c-a653-43bf-af76-a4f7b3df049e",
+      "puntos": 20,
+      "tipo": "CANJE",
+      "descripcion": "Canje por premio: Stickers Pack",
+      "created_at": "2026-05-27T19:42:12.854Z"
+    },
+    {
+      "id": "7d741f5b-b509-40b8-9322-7dc4bbf639e1",
+      "estudiante_id": "18fbec2c-a653-43bf-af76-a4f7b3df049e",
+      "puntos": 20,
+      "tipo": "CANJE",
+      "descripcion": "Canje por premio: Stickers Pack",
+      "created_at": "2026-05-27T19:43:27.674Z"
+    },
+    {
+      "id": "231ac26f-f95a-4a05-b228-16e5f5f878a1",
+      "estudiante_id": "18fbec2c-a653-43bf-af76-a4f7b3df049e",
+      "puntos": 5,
+      "tipo": "SUMA",
+      "descripcion": "Reciclaje: 5 botella(s) de 100ml",
+      "created_at": "2026-05-28T21:10:26.000Z"
+    },
+    {
+      "id": "fcb0a4cd-ce10-4b83-9b36-ab475ea0d209",
+      "estudiante_id": "18fbec2c-a653-43bf-af76-a4f7b3df049e",
+      "puntos": 3,
+      "tipo": "SUMA",
+      "descripcion": "Reciclaje: 3 botella(s) de 100ml",
+      "created_at": "2026-05-28T21:15:30.641Z"
+    }
+  ],
+  "canjes": [
+    {
+      "id": "5e1b14de-f8f7-47cc-8f87-855e9a1bc0f3",
+      "estudiante_id": "18fbec2c-a653-43bf-af76-a4f7b3df049e",
+      "premio_id": "51681661-6dba-44e3-905c-aa4f802800bd",
+      "puntos_gastados": 20,
+      "estado": "PENDIENTE",
+      "observacion": null,
+      "aprobado_por": null,
+      "fecha_aprobacion": null,
+      "fecha_entrega": null,
+      "created_at": "2026-05-27T19:43:27.677Z"
+    }
+  ],
+  "reciclajes": [
+    {
+      "id": "2d705d19-a5f6-4629-8044-33c9579d7aba",
+      "estudiante_id": "18fbec2c-a653-43bf-af76-a4f7b3df049e",
+      "tipo_botella_id": "d88a74e8-b72c-437c-8118-2fafc28d17ae",
+      "cantidad": 5,
+      "puntos_ganados": 5,
+      "registrado_por": "9402cf11-041d-4b20-a463-37abbd331bcd",
+      "created_at": "2026-05-28T21:10:26.004Z"
+    },
+    {
+      "id": "b342a0e0-052f-4269-b3fb-794bc54d5403",
+      "estudiante_id": "18fbec2c-a653-43bf-af76-a4f7b3df049e",
+      "tipo_botella_id": "d88a74e8-b72c-437c-8118-2fafc28d17ae",
+      "cantidad": 3,
+      "puntos_ganados": 3,
+      "registrado_por": "9402cf11-041d-4b20-a463-37abbd331bcd",
+      "created_at": "2026-05-28T21:15:30.645Z"
+    }
+  ],
+  "auditoria": [
+    {
+      "id": "5e7d53e2-12d0-4b6a-881f-49ce18ccff0d",
+      "tabla": "reciclajes",
+      "accion": "CREATE",
+      "registro_id": "2d705d19-a5f6-4629-8044-33c9579d7aba",
+      "datos_anteriores": null,
+      "datos_nuevos": {
+        "cantidad": 5,
+        "tipo_botella": "100ml",
+        "estudiante_id": "18fbec2c-a653-43bf-af76-a4f7b3df049e",
+        "puntos_ganados": 5
+      },
+      "usuario_id": "9402cf11-041d-4b20-a463-37abbd331bcd",
+      "usuario_email": "admin@bachillero.com",
+      "ip": "::1",
+      "created_at": "2026-05-28T21:10:26.008Z"
+    },
+    {
+      "id": "ea653b31-5ab7-4f31-b8dc-612e1e3e51e8",
+      "tabla": "reciclajes",
+      "accion": "CREATE",
+      "registro_id": "b342a0e0-052f-4269-b3fb-794bc54d5403",
+      "datos_anteriores": null,
+      "datos_nuevos": {
+        "cantidad": 3,
+        "tipo_botella": "100ml",
+        "estudiante_id": "18fbec2c-a653-43bf-af76-a4f7b3df049e",
+        "puntos_ganados": 3
+      },
+      "usuario_id": "9402cf11-041d-4b20-a463-37abbd331bcd",
+      "usuario_email": "admin@bachillero.com",
+      "ip": "::1",
+      "created_at": "2026-05-28T21:15:30.648Z"
+    }
+  ]
+}

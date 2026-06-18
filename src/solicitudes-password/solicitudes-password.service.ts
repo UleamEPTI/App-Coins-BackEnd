@@ -7,6 +7,12 @@ import { Usuario } from '../usuarios/entities/usuario.entity';
 import { CreateSolicitudDto } from './dto/create-solicitud.dto';
 import { AtenderSolicitudDto } from './dto/atender-solicitud.dto';
 
+const CAMPOS_USUARIO_SEGUROS = [
+  'id', 'nombres', 'apellidos', 'cedula', 'telefono', 'email',
+  'foto_perfil', 'institucion_id', 'curso_id', 'activo', 'materia',
+  'created_at', 'updated_at',
+] as const;
+
 @Injectable()
 export class SolicitudesPasswordService {
   constructor(
@@ -46,23 +52,26 @@ export class SolicitudesPasswordService {
       estado: EstadoSolicitud.PENDIENTE,
     });
 
-    return this.solicitudRepository.save(solicitud);
+    const saved = await this.solicitudRepository.save(solicitud);
+    return this.limpiarSolicitud(saved);
   }
 
   // ADMIN ve todas las solicitudes pendientes
   async findPendientes(): Promise<SolicitudPassword[]> {
-    return this.solicitudRepository.find({
+    const solicitudes = await this.solicitudRepository.find({
       where: { estado: EstadoSolicitud.PENDIENTE },
       relations: ['solicitado_por', 'usuario_objetivo'],
       order: { created_at: 'DESC' },
     });
+    return solicitudes.map(s => this.limpiarSolicitud(s));
   }
 
   async findAll(): Promise<SolicitudPassword[]> {
-    return this.solicitudRepository.find({
+    const solicitudes = await this.solicitudRepository.find({
       relations: ['solicitado_por', 'usuario_objetivo'],
       order: { created_at: 'DESC' },
     });
+    return solicitudes.map(s => this.limpiarSolicitud(s));
   }
 
   // ADMIN atiende la solicitud y cambia la contraseña
@@ -85,13 +94,29 @@ export class SolicitudesPasswordService {
 
     solicitud.estado = dto.estado;
     if (dto.mensaje) solicitud.mensaje = dto.mensaje;
-    await this.solicitudRepository.save(solicitud);
+    const saved = await this.solicitudRepository.save(solicitud);
 
     return {
-      solicitud,
+      solicitud: this.limpiarSolicitud(saved),
       message: dto.estado === EstadoSolicitud.ATENDIDA
         ? 'Contraseña cambiada exitosamente'
         : 'Solicitud rechazada',
     };
+  }
+
+  // Elimina password_hash de las relaciones antes de devolver la respuesta
+  private limpiarSolicitud(solicitud: SolicitudPassword): SolicitudPassword {
+    const limpia = { ...solicitud } as any;
+
+    if (limpia.solicitado_por) {
+      const { password_hash, ...resto } = limpia.solicitado_por;
+      limpia.solicitado_por = resto;
+    }
+    if (limpia.usuario_objetivo) {
+      const { password_hash, ...resto } = limpia.usuario_objetivo;
+      limpia.usuario_objetivo = resto;
+    }
+
+    return limpia;
   }
 }

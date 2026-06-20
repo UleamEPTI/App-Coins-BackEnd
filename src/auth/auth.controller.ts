@@ -30,4 +30,16 @@ export class AuthController {
   refresh(@Request() req: any) {
     return this.authService.refreshToken(req.user.id);
   }
+
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @Post('cambiar-password')
+  @ApiOperation({ summary: 'Usuario cambia su propia contraseña (obligatorio en primer login)' })
+  cambiarPassword(
+    @Request() req: any,
+    @Body('password_actual') passwordActual: string,
+    @Body('password_nueva') passwordNueva: string,
+  ) {
+    return this.authService.cambiarPasswordPropia(req.user.id, passwordActual, passwordNueva);
+  }
 }

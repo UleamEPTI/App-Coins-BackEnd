@@ -42,6 +42,9 @@ export class Usuario {
 
   @Column({ nullable: true })
   materia: string;
+  
+  @Column({ name: 'debe_cambiar_password', default: true })
+  debe_cambiar_password: boolean;
 
   @CreateDateColumn({ name: 'created_at' })
   created_at: Date;

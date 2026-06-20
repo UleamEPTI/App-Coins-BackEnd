@@ -71,7 +71,9 @@ export class UsuariosService {
       rol,
       institucion_id: dto.institucion_id,
       curso_id: dto.curso_id,
+      materia: dto.materia,
       activo: true,
+      debe_cambiar_password: true,
     });
 
     const saved = await this.usuarioRepository.save(usuario);
@@ -105,7 +107,11 @@ export class UsuariosService {
     return { message: 'Usuario desactivado correctamente' };
   }
 
+  async save(usuario: Usuario): Promise<Usuario> {
+    return this.usuarioRepository.save(usuario);
+  }
+
   async getRoles() {
     return this.rolRepository.find();
   }
-} 
+}

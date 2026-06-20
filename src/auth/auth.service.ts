@@ -42,6 +42,7 @@ export class AuthService {
         apellidos: usuario.apellidos,
         email: usuario.email,
         rol: usuario.rol.nombre,
+        debe_cambiar_password: usuario.debe_cambiar_password,
       },
     };
   }
@@ -58,6 +59,7 @@ export class AuthService {
       email: usuario.email,
       rol: usuario.rol.nombre,
       activo: usuario.activo,
+      debe_cambiar_password: usuario.debe_cambiar_password,
     };
   }
 
@@ -81,7 +83,26 @@ export class AuthService {
         apellidos: usuario.apellidos,
         email: usuario.email,
         rol: usuario.rol.nombre,
+        debe_cambiar_password: usuario.debe_cambiar_password,
       },
     };
+  }
+
+  async cambiarPasswordPropia(userId: string, passwordActual: string, passwordNueva: string) {
+    const usuario = await this.usuariosService.findById(userId);
+    if (!usuario) {
+      throw new UnauthorizedException('Usuario no encontrado');
+    }
+
+    const passwordValida = await bcrypt.compare(passwordActual, usuario.password_hash);
+    if (!passwordValida) {
+      throw new UnauthorizedException('La contraseña actual es incorrecta');
+    }
+
+    usuario.password_hash = await bcrypt.hash(passwordNueva, 10);
+    usuario.debe_cambiar_password = false;
+    await this.usuariosService.save(usuario);
+
+    return { message: 'Contraseña actualizada correctamente' };
   }
 }

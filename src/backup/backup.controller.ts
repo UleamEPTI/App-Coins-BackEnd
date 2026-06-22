@@ -6,7 +6,7 @@ import { BackupService } from './backup.service';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 
 @ApiTags('Backup')
-@ApiBearerAuth()
+@ApiBearerAuth('access-token')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Controller('backup')
 export class BackupController {

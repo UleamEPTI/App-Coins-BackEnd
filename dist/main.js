@@ -11,13 +11,7 @@ async function bootstrap() {
     });
     app.use((0, helmet_1.default)());
     app.enableCors({
-        origin: [
-            'http://localhost:3000',
-            'http://localhost:19000',
-            'http://localhost:5173',
-            'http://192.168.137.100:3000',
-            'http://192.168.137.100',
-        ],
+        origin: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
         allowedHeaders: ['Content-Type', 'Authorization'],
         credentials: true,
@@ -33,7 +27,14 @@ async function bootstrap() {
             .setTitle('Bachillero API')
             .setDescription('API para el sistema de reciclaje y premiación estudiantil')
             .setVersion('1.0')
-            .addBearerAuth()
+            .addBearerAuth({
+            type: 'http',
+            scheme: 'bearer',
+            bearerFormat: 'JWT',
+            name: 'JWT',
+            description: 'Ingresa el token JWT',
+            in: 'header',
+        }, 'access-token')
             .build();
         const document = swagger_1.SwaggerModule.createDocument(app, config);
         swagger_1.SwaggerModule.setup('api/docs', app, document);

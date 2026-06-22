@@ -8,7 +8,7 @@ import { CreateSolicitudDto } from './dto/create-solicitud.dto';
 import { AtenderSolicitudDto } from './dto/atender-solicitud.dto';
 
 @ApiTags('SolicitudesPassword')
-@ApiBearerAuth()
+@ApiBearerAuth('access-token')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Controller('solicitudes-password')
 export class SolicitudesPasswordController {

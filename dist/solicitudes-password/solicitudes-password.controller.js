@@ -92,7 +92,7 @@ __decorate([
 ], SolicitudesPasswordController.prototype, "atender", null);
 exports.SolicitudesPasswordController = SolicitudesPasswordController = __decorate([
     (0, swagger_1.ApiTags)('SolicitudesPassword'),
-    (0, swagger_1.ApiBearerAuth)(),
+    (0, swagger_1.ApiBearerAuth)('access-token'),
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard),
     (0, common_1.Controller)('solicitudes-password'),
     __metadata("design:paramtypes", [solicitudes_password_service_1.SolicitudesPasswordService])

@@ -47,7 +47,7 @@ __decorate([
 ], AuthController.prototype, "login", null);
 __decorate([
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
-    (0, swagger_1.ApiBearerAuth)(),
+    (0, swagger_1.ApiBearerAuth)('access-token'),
     (0, common_1.Get)('profile'),
     (0, swagger_1.ApiOperation)({ summary: 'Ver perfil del usuario autenticado' }),
     __param(0, (0, common_1.Request)()),
@@ -57,7 +57,7 @@ __decorate([
 ], AuthController.prototype, "getProfile", null);
 __decorate([
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
-    (0, swagger_1.ApiBearerAuth)(),
+    (0, swagger_1.ApiBearerAuth)('access-token'),
     (0, common_1.Get)('refresh'),
     (0, swagger_1.ApiOperation)({ summary: 'Renovar token JWT' }),
     __param(0, (0, common_1.Request)()),
@@ -67,8 +67,7 @@ __decorate([
 ], AuthController.prototype, "refresh", null);
 __decorate([
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
-    (0, swagger_1.ApiBearerAuth)(),
-    (0, common_1.Post)('cambiar-password'),
+    (0, swagger_1.ApiBearerAuth)('access-token'),
     (0, swagger_1.ApiOperation)({ summary: 'Usuario cambia su propia contraseña (obligatorio en primer login)' }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)('password_actual')),

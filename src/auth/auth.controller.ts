@@ -16,7 +16,7 @@ export class AuthController {
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @ApiBearerAuth()
+  @ApiBearerAuth('access-token')
   @Get('profile')
   @ApiOperation({ summary: 'Ver perfil del usuario autenticado' })
   getProfile(@Request() req: any) {
@@ -24,7 +24,7 @@ export class AuthController {
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @ApiBearerAuth()
+  @ApiBearerAuth('access-token')
   @Get('refresh')
   @ApiOperation({ summary: 'Renovar token JWT' })
   refresh(@Request() req: any) {
@@ -32,8 +32,7 @@ export class AuthController {
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @ApiBearerAuth()
-  @Post('cambiar-password')
+  @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Usuario cambia su propia contraseña (obligatorio en primer login)' })
   cambiarPassword(
     @Request() req: any,

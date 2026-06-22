@@ -12,9 +12,10 @@ async function bootstrap() {
   app.use(helmet());
 
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:19000', '*'],
+    origin: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
   });
 
   app.setGlobalPrefix('api');
@@ -25,13 +26,22 @@ async function bootstrap() {
     transform: true,
   }));
 
-  // Swagger SOLO en desarrollo, nunca en producción
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()
       .setTitle('Bachillero API')
       .setDescription('API para el sistema de reciclaje y premiación estudiantil')
       .setVersion('1.0')
-      .addBearerAuth()
+      .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Ingresa el token JWT',
+        in: 'header',
+      },
+      'access-token',
+    )
       .build();
 
     const document = SwaggerModule.createDocument(app, config);
@@ -39,7 +49,8 @@ async function bootstrap() {
   }
 
   const port = process.env.PORT ?? 3000;
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
+
   Logger.log(`🚀 Servidor corriendo en http://localhost:${port}/api`);
   if (process.env.NODE_ENV !== 'production') {
     Logger.log(`📚 Documentación en http://localhost:${port}/api/docs`);

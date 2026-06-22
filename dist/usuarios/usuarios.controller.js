@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsuariosController = void 0;
 const common_1 = require("@nestjs/common");
 const passport_1 = require("@nestjs/passport");
+const swagger_1 = require("@nestjs/swagger");
 const usuarios_service_1 = require("./usuarios.service");
 const create_usuario_dto_1 = require("./dto/create-usuario.dto");
 const roles_guard_1 = require("../auth/guards/roles.guard");
@@ -91,6 +92,8 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UsuariosController.prototype, "remove", null);
 exports.UsuariosController = UsuariosController = __decorate([
+    (0, swagger_1.ApiTags)('Usuarios'),
+    (0, swagger_1.ApiBearerAuth)('access-token'),
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard),
     (0, common_1.Controller)('usuarios'),
     __metadata("design:paramtypes", [usuarios_service_1.UsuariosService])

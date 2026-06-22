@@ -47,7 +47,7 @@ __decorate([
 ], BackupController.prototype, "listar", null);
 exports.BackupController = BackupController = __decorate([
     (0, swagger_1.ApiTags)('Backup'),
-    (0, swagger_1.ApiBearerAuth)(),
+    (0, swagger_1.ApiBearerAuth)('access-token'),
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard),
     (0, common_1.Controller)('backup'),
     __metadata("design:paramtypes", [backup_service_1.BackupService])

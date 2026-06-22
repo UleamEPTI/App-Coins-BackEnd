@@ -1,10 +1,13 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { UsuariosService } from './usuarios.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 
+@ApiTags('Usuarios')
+@ApiBearerAuth('access-token')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Controller('usuarios')
 export class UsuariosController {
@@ -44,4 +47,4 @@ export class UsuariosController {
   remove(@Param('id') id: string) {
     return this.usuariosService.remove(id);
   }
-}   
+}

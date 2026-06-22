@@ -1,0 +1,11 @@
+import { ReciclajesService } from './reciclajes.service';
+import { CreateReciclajeDto } from './dto/create-reciclaje.dto';
+export declare class ReciclajesController {
+    private readonly reciclajesService;
+    constructor(reciclajesService: ReciclajesService);
+    registrar(dto: CreateReciclajeDto, req: any): Promise<import("./entities/reciclaje.entity").Reciclaje>;
+    findAll(): Promise<import("./entities/reciclaje.entity").Reciclaje[]>;
+    findByEstudiante(estudiante_id: string): Promise<import("./entities/reciclaje.entity").Reciclaje[]>;
+    findByInstitucion(institucion_id: string): Promise<import("./entities/reciclaje.entity").Reciclaje[]>;
+    findByCurso(curso_id: string): Promise<import("./entities/reciclaje.entity").Reciclaje[]>;
+}

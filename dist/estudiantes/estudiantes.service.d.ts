@@ -1,0 +1,18 @@
+import { Repository } from 'typeorm';
+import { Estudiante } from './entities/estudiante.entity';
+import { Curso } from './entities/curso.entity';
+import { Usuario } from '../usuarios/entities/usuario.entity';
+import { CreateEstudianteDto } from './dto/create-estudiante.dto';
+export declare class EstudiantesService {
+    private readonly estudianteRepository;
+    private readonly cursoRepository;
+    private readonly usuarioRepository;
+    constructor(estudianteRepository: Repository<Estudiante>, cursoRepository: Repository<Curso>, usuarioRepository: Repository<Usuario>);
+    create(dto: CreateEstudianteDto): Promise<Estudiante>;
+    findAll(): Promise<Estudiante[]>;
+    findOne(id: string): Promise<Estudiante>;
+    update(id: string, dto: Partial<CreateEstudianteDto>): Promise<Estudiante>;
+    remove(id: string): Promise<{
+        message: string;
+    }>;
+}

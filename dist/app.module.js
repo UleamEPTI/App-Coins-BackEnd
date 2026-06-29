@@ -27,6 +27,7 @@ const reciclajes_module_1 = require("./reciclajes/reciclajes.module");
 const reportes_module_1 = require("./reportes/reportes.module");
 const backup_module_1 = require("./backup/backup.module");
 const solicitudes_password_module_1 = require("./solicitudes-password/solicitudes-password.module");
+const cursos_module_1 = require("./cursos/cursos.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -67,6 +68,7 @@ exports.AppModule = AppModule = __decorate([
             reportes_module_1.ReportesModule,
             backup_module_1.BackupModule,
             solicitudes_password_module_1.SolicitudesPasswordModule,
+            cursos_module_1.CursosModule,
         ],
         providers: [
             {

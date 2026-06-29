@@ -1,13 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Reciclaje } from './entities/reciclaje.entity';
 import { Estudiante } from '../estudiantes/entities/estudiante.entity';
 import { TipoBotella } from '../tipos-botella/entities/tipo-botella.entity';
 import { Usuario } from '../usuarios/entities/usuario.entity';
 import { HistorialPuntos, TipoTransaccion } from '../puntos/entities/historial-puntos.entity';
 import { CreateReciclajeDto } from './dto/create-reciclaje.dto';
-import { AuditoriaService, AuditoriaPayload } from '../auditoria/auditoria.service';
+import { AuditoriaService } from '../auditoria/auditoria.service';
 import { AccionAuditoria } from '../auditoria/entities/auditoria.entity';
 
 @Injectable()
@@ -24,6 +25,8 @@ export class ReciclajesService {
     @InjectRepository(HistorialPuntos)
     private readonly historialRepository: Repository<HistorialPuntos>,
     private readonly auditoriaService: AuditoriaService,
+    @InjectDataSource()
+    private readonly dataSource: DataSource,
   ) {}
 
   async registrar(dto: CreateReciclajeDto, registradoPorId: string, ip?: string): Promise<Reciclaje> {
@@ -33,53 +36,57 @@ export class ReciclajesService {
     const tipoBotella = await this.tipoBotellaRepository.findOne({ where: { id: dto.tipo_botella_id, activo: true } });
     if (!tipoBotella) throw new NotFoundException(`Tipo de botella ${dto.tipo_botella_id} no encontrado`);
 
-    const registradoPor = await this.usuarioRepository.findOne({ 
+    const registradoPor = await this.usuarioRepository.findOne({
       where: { id: registradoPorId },
       select: ['id', 'nombres', 'apellidos', 'email'],
     });
-
     if (!registradoPor) throw new NotFoundException(`Usuario ${registradoPorId} no encontrado`);
 
     const puntosGanados = tipoBotella.puntos * dto.cantidad;
 
-    // Sumar puntos al estudiante
-    estudiante.puntos += puntosGanados;
-    await this.estudianteRepository.save(estudiante);
+    // Todo dentro de una sola transacción: si algo falla, se revierte todo
+    const saved = await this.dataSource.transaction(async (manager) => {
+      estudiante.puntos += puntosGanados;
+      await manager.save(estudiante);
 
-    // Registrar en historial
-    const historial = this.historialRepository.create({
-      estudiante,
-      tipo: TipoTransaccion.SUMA,
-      puntos: puntosGanados,
-      descripcion: `Reciclaje: ${dto.cantidad} botella(s) de ${tipoBotella.tamano}`,
-    });
-    await this.historialRepository.save(historial);
+      const historial = manager.create(HistorialPuntos, {
+        estudiante,
+        tipo: TipoTransaccion.SUMA,
+        puntos: puntosGanados,
+        descripcion: `Reciclaje: ${dto.cantidad} botella(s) de ${tipoBotella.tamano}`,
+      });
+      await manager.save(historial);
 
-    // Guardar registro de reciclaje
-    const reciclaje = this.reciclajeRepository.create({
-      estudiante,
-      tipo_botella: tipoBotella,
-      registrado_por: registradoPor,
-      cantidad: dto.cantidad,
-      puntos_ganados: puntosGanados,
-    });
-    const saved = await this.reciclajeRepository.save(reciclaje);
-
-    // Auditoría
-    await this.auditoriaService.registrar({
-      tabla: 'reciclajes',
-      accion: AccionAuditoria.CREATE,
-      registro_id: saved.id,
-      datos_nuevos: {
-        estudiante_id: dto.estudiante_id,
-        tipo_botella: tipoBotella.tamano,
+      const reciclaje = manager.create(Reciclaje, {
+        estudiante,
+        tipo_botella: tipoBotella,
+        registrado_por: registradoPor,
         cantidad: dto.cantidad,
         puntos_ganados: puntosGanados,
-      },
-      usuario_id: registradoPorId,
-      usuario_email: registradoPor.email,
-      ip,
+      });
+      return manager.save(reciclaje);
     });
+
+    // Auditoría fuera de la transacción crítica (no debe bloquear el reciclaje si falla)
+    try {
+      await this.auditoriaService.registrar({
+        tabla: 'reciclajes',
+        accion: AccionAuditoria.CREATE,
+        registro_id: saved.id,
+        datos_nuevos: {
+          estudiante_id: dto.estudiante_id,
+          tipo_botella: tipoBotella.tamano,
+          cantidad: dto.cantidad,
+          puntos_ganados: puntosGanados,
+        },
+        usuario_id: registradoPorId,
+        usuario_email: registradoPor.email,
+        ip,
+      });
+    } catch (err) {
+      // Log del error pero no falla la operación principal
+      console.error('Error al registrar auditoría:', err);
+    }
 
     return saved;
   }
@@ -121,4 +128,4 @@ export class ReciclajesService {
       .orderBy('r.created_at', 'DESC')
       .getMany();
   }
-} 
+}

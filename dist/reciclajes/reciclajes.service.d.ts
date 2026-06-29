@@ -1,4 +1,4 @@
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Reciclaje } from './entities/reciclaje.entity';
 import { Estudiante } from '../estudiantes/entities/estudiante.entity';
 import { TipoBotella } from '../tipos-botella/entities/tipo-botella.entity';
@@ -13,7 +13,8 @@ export declare class ReciclajesService {
     private readonly usuarioRepository;
     private readonly historialRepository;
     private readonly auditoriaService;
-    constructor(reciclajeRepository: Repository<Reciclaje>, estudianteRepository: Repository<Estudiante>, tipoBotellaRepository: Repository<TipoBotella>, usuarioRepository: Repository<Usuario>, historialRepository: Repository<HistorialPuntos>, auditoriaService: AuditoriaService);
+    private readonly dataSource;
+    constructor(reciclajeRepository: Repository<Reciclaje>, estudianteRepository: Repository<Estudiante>, tipoBotellaRepository: Repository<TipoBotella>, usuarioRepository: Repository<Usuario>, historialRepository: Repository<HistorialPuntos>, auditoriaService: AuditoriaService, dataSource: DataSource);
     registrar(dto: CreateReciclajeDto, registradoPorId: string, ip?: string): Promise<Reciclaje>;
     findAll(): Promise<Reciclaje[]>;
     findByEstudiante(estudiante_id: string): Promise<Reciclaje[]>;

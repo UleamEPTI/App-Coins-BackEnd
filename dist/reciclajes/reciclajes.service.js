@@ -15,7 +15,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ReciclajesService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
-const typeorm_2 = require("typeorm");
+const typeorm_2 = require("@nestjs/typeorm");
+const typeorm_3 = require("typeorm");
 const reciclaje_entity_1 = require("./entities/reciclaje.entity");
 const estudiante_entity_1 = require("../estudiantes/entities/estudiante.entity");
 const tipo_botella_entity_1 = require("../tipos-botella/entities/tipo-botella.entity");
@@ -30,13 +31,15 @@ let ReciclajesService = class ReciclajesService {
     usuarioRepository;
     historialRepository;
     auditoriaService;
-    constructor(reciclajeRepository, estudianteRepository, tipoBotellaRepository, usuarioRepository, historialRepository, auditoriaService) {
+    dataSource;
+    constructor(reciclajeRepository, estudianteRepository, tipoBotellaRepository, usuarioRepository, historialRepository, auditoriaService, dataSource) {
         this.reciclajeRepository = reciclajeRepository;
         this.estudianteRepository = estudianteRepository;
         this.tipoBotellaRepository = tipoBotellaRepository;
         this.usuarioRepository = usuarioRepository;
         this.historialRepository = historialRepository;
         this.auditoriaService = auditoriaService;
+        this.dataSource = dataSource;
     }
     async registrar(dto, registradoPorId, ip) {
         const estudiante = await this.estudianteRepository.findOne({ where: { id: dto.estudiante_id } });
@@ -52,37 +55,44 @@ let ReciclajesService = class ReciclajesService {
         if (!registradoPor)
             throw new common_1.NotFoundException(`Usuario ${registradoPorId} no encontrado`);
         const puntosGanados = tipoBotella.puntos * dto.cantidad;
-        estudiante.puntos += puntosGanados;
-        await this.estudianteRepository.save(estudiante);
-        const historial = this.historialRepository.create({
-            estudiante,
-            tipo: historial_puntos_entity_1.TipoTransaccion.SUMA,
-            puntos: puntosGanados,
-            descripcion: `Reciclaje: ${dto.cantidad} botella(s) de ${tipoBotella.tamano}`,
-        });
-        await this.historialRepository.save(historial);
-        const reciclaje = this.reciclajeRepository.create({
-            estudiante,
-            tipo_botella: tipoBotella,
-            registrado_por: registradoPor,
-            cantidad: dto.cantidad,
-            puntos_ganados: puntosGanados,
-        });
-        const saved = await this.reciclajeRepository.save(reciclaje);
-        await this.auditoriaService.registrar({
-            tabla: 'reciclajes',
-            accion: auditoria_entity_1.AccionAuditoria.CREATE,
-            registro_id: saved.id,
-            datos_nuevos: {
-                estudiante_id: dto.estudiante_id,
-                tipo_botella: tipoBotella.tamano,
+        const saved = await this.dataSource.transaction(async (manager) => {
+            estudiante.puntos += puntosGanados;
+            await manager.save(estudiante);
+            const historial = manager.create(historial_puntos_entity_1.HistorialPuntos, {
+                estudiante,
+                tipo: historial_puntos_entity_1.TipoTransaccion.SUMA,
+                puntos: puntosGanados,
+                descripcion: `Reciclaje: ${dto.cantidad} botella(s) de ${tipoBotella.tamano}`,
+            });
+            await manager.save(historial);
+            const reciclaje = manager.create(reciclaje_entity_1.Reciclaje, {
+                estudiante,
+                tipo_botella: tipoBotella,
+                registrado_por: registradoPor,
                 cantidad: dto.cantidad,
                 puntos_ganados: puntosGanados,
-            },
-            usuario_id: registradoPorId,
-            usuario_email: registradoPor.email,
-            ip,
+            });
+            return manager.save(reciclaje);
         });
+        try {
+            await this.auditoriaService.registrar({
+                tabla: 'reciclajes',
+                accion: auditoria_entity_1.AccionAuditoria.CREATE,
+                registro_id: saved.id,
+                datos_nuevos: {
+                    estudiante_id: dto.estudiante_id,
+                    tipo_botella: tipoBotella.tamano,
+                    cantidad: dto.cantidad,
+                    puntos_ganados: puntosGanados,
+                },
+                usuario_id: registradoPorId,
+                usuario_email: registradoPor.email,
+                ip,
+            });
+        }
+        catch (err) {
+            console.error('Error al registrar auditoría:', err);
+        }
         return saved;
     }
     async findAll() {
@@ -128,11 +138,13 @@ exports.ReciclajesService = ReciclajesService = __decorate([
     __param(2, (0, typeorm_1.InjectRepository)(tipo_botella_entity_1.TipoBotella)),
     __param(3, (0, typeorm_1.InjectRepository)(usuario_entity_1.Usuario)),
     __param(4, (0, typeorm_1.InjectRepository)(historial_puntos_entity_1.HistorialPuntos)),
-    __metadata("design:paramtypes", [typeorm_2.Repository,
-        typeorm_2.Repository,
-        typeorm_2.Repository,
-        typeorm_2.Repository,
-        typeorm_2.Repository,
-        auditoria_service_1.AuditoriaService])
+    __param(6, (0, typeorm_2.InjectDataSource)()),
+    __metadata("design:paramtypes", [typeorm_3.Repository,
+        typeorm_3.Repository,
+        typeorm_3.Repository,
+        typeorm_3.Repository,
+        typeorm_3.Repository,
+        auditoria_service_1.AuditoriaService,
+        typeorm_3.DataSource])
 ], ReciclajesService);
 //# sourceMappingURL=reciclajes.service.js.map

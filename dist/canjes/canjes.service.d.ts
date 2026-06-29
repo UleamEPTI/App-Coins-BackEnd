@@ -1,4 +1,4 @@
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Canje, EstadoCanje } from './entities/canje.entity';
 import { Estudiante } from '../estudiantes/entities/estudiante.entity';
 import { Premio } from '../premios/entities/premio.entity';
@@ -11,7 +11,8 @@ export declare class CanjesService {
     private readonly premioRepository;
     private readonly historialRepository;
     private readonly auditoriaService;
-    constructor(canjeRepository: Repository<Canje>, estudianteRepository: Repository<Estudiante>, premioRepository: Repository<Premio>, historialRepository: Repository<HistorialPuntos>, auditoriaService: AuditoriaService);
+    private readonly dataSource;
+    constructor(canjeRepository: Repository<Canje>, estudianteRepository: Repository<Estudiante>, premioRepository: Repository<Premio>, historialRepository: Repository<HistorialPuntos>, auditoriaService: AuditoriaService, dataSource: DataSource);
     canjear(dto: CreateCanjeDto, usuarioId?: string, usuarioEmail?: string, ip?: string): Promise<Canje>;
     findAll(): Promise<Canje[]>;
     findByEstudiante(estudiante_id: string): Promise<Canje[]>;

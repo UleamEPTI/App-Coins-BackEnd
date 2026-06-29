@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Canje, EstadoCanje } from './entities/canje.entity';
 import { Estudiante } from '../estudiantes/entities/estudiante.entity';
 import { Premio } from '../premios/entities/premio.entity';
@@ -21,6 +21,8 @@ export class CanjesService {
     @InjectRepository(HistorialPuntos)
     private readonly historialRepository: Repository<HistorialPuntos>,
     private readonly auditoriaService: AuditoriaService,
+    @InjectDataSource()
+    private readonly dataSource: DataSource,
   ) {}
 
   async canjear(dto: CreateCanjeDto, usuarioId?: string, usuarioEmail?: string, ip?: string): Promise<Canje> {
@@ -38,43 +40,50 @@ export class CanjesService {
       );
     }
 
-    estudiante.puntos -= premio.costo_puntos;
-    premio.stock -= 1;
+    // Toda la operación crítica en una sola transacción
+    const saved = await this.dataSource.transaction(async (manager) => {
+      estudiante.puntos -= premio.costo_puntos;
+      premio.stock -= 1;
 
-    await this.estudianteRepository.save(estudiante);
-    await this.premioRepository.save(premio);
+      await manager.save(estudiante);
+      await manager.save(premio);
 
-    const historial = this.historialRepository.create({
-      estudiante,
-      tipo: TipoTransaccion.CANJE,
-      puntos: premio.costo_puntos,
-      descripcion: `Canje por premio: ${premio.nombre}`,
-    });
-    await this.historialRepository.save(historial);
+      const historial = manager.create(HistorialPuntos, {
+        estudiante,
+        tipo: TipoTransaccion.CANJE,
+        puntos: premio.costo_puntos,
+        descripcion: `Canje por premio: ${premio.nombre}`,
+      });
+      await manager.save(historial);
 
-    const canje = this.canjeRepository.create({
-      estudiante,
-      premio,
-      puntos_gastados: premio.costo_puntos,
-      estado: EstadoCanje.PENDIENTE,
-    });
-    const saved = await this.canjeRepository.save(canje);
-
-    // Auditoría
-    await this.auditoriaService.registrar({
-      tabla: 'canjes',
-      accion: AccionAuditoria.CREATE,
-      registro_id: saved.id,
-      datos_nuevos: {
-        estudiante_id: dto.estudiante_id,
-        premio: premio.nombre,
+      const canje = manager.create(Canje, {
+        estudiante,
+        premio,
         puntos_gastados: premio.costo_puntos,
         estado: EstadoCanje.PENDIENTE,
-      },
-      usuario_id: usuarioId,
-      usuario_email: usuarioEmail,
-      ip,
+      });
+      return manager.save(canje);
     });
+
+    // Auditoría fuera de la transacción crítica
+    try {
+      await this.auditoriaService.registrar({
+        tabla: 'canjes',
+        accion: AccionAuditoria.CREATE,
+        registro_id: saved.id,
+        datos_nuevos: {
+          estudiante_id: dto.estudiante_id,
+          premio: premio.nombre,
+          puntos_gastados: premio.costo_puntos,
+          estado: EstadoCanje.PENDIENTE,
+        },
+        usuario_id: usuarioId,
+        usuario_email: usuarioEmail,
+        ip,
+      });
+    } catch (err) {
+      console.error('Error al registrar auditoría:', err);
+    }
 
     return saved;
   }
@@ -102,17 +111,20 @@ export class CanjesService {
     canje.estado = estado;
     const saved = await this.canjeRepository.save(canje);
 
-    // Auditoría
-    await this.auditoriaService.registrar({
-      tabla: 'canjes',
-      accion: AccionAuditoria.UPDATE,
-      registro_id: id,
-      datos_anteriores: { estado: estadoAnterior },
-      datos_nuevos: { estado },
-      usuario_id: usuarioId,
-      usuario_email: usuarioEmail,
-      ip,
-    });
+    try {
+      await this.auditoriaService.registrar({
+        tabla: 'canjes',
+        accion: AccionAuditoria.UPDATE,
+        registro_id: id,
+        datos_anteriores: { estado: estadoAnterior },
+        datos_nuevos: { estado },
+        usuario_id: usuarioId,
+        usuario_email: usuarioEmail,
+        ip,
+      });
+    } catch (err) {
+      console.error('Error al registrar auditoría:', err);
+    }
 
     return saved;
   }

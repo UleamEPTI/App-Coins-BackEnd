@@ -26,22 +26,29 @@ export class CanjesService {
   ) {}
 
   async canjear(dto: CreateCanjeDto, usuarioId?: string, usuarioEmail?: string, ip?: string): Promise<Canje> {
-    const estudiante = await this.estudianteRepository.findOne({ where: { id: dto.estudiante_id } });
-    if (!estudiante) throw new NotFoundException(`Estudiante ${dto.estudiante_id} no encontrado`);
-
-    const premio = await this.premioRepository.findOne({ where: { id: dto.premio_id, activo: true } });
-    if (!premio) throw new NotFoundException(`Premio ${dto.premio_id} no encontrado o inactivo`);
-
-    if (premio.stock <= 0) throw new BadRequestException('El premio no tiene stock disponible');
-
-    if (estudiante.puntos < premio.costo_puntos) {
-      throw new BadRequestException(
-        `Puntos insuficientes. Tiene ${estudiante.puntos}, necesita ${premio.costo_puntos}`,
-      );
-    }
-
-    // Toda la operación crítica en una sola transacción
     const saved = await this.dataSource.transaction(async (manager) => {
+      // Bloqueo de fila: si otra petición está canjeando el mismo estudiante/premio,
+      // esta espera hasta que la primera termine, evitando el race condition.
+      const estudiante = await manager.findOne(Estudiante, {
+        where: { id: dto.estudiante_id },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!estudiante) throw new NotFoundException(`Estudiante ${dto.estudiante_id} no encontrado`);
+
+      const premio = await manager.findOne(Premio, {
+        where: { id: dto.premio_id, activo: true },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!premio) throw new NotFoundException(`Premio ${dto.premio_id} no encontrado o inactivo`);
+
+      if (premio.stock <= 0) throw new BadRequestException('El premio no tiene stock disponible');
+
+      if (estudiante.puntos < premio.costo_puntos) {
+        throw new BadRequestException(
+          `Puntos insuficientes. Tiene ${estudiante.puntos}, necesita ${premio.costo_puntos}`,
+        );
+      }
+
       estudiante.puntos -= premio.costo_puntos;
       premio.stock -= 1;
 
@@ -62,7 +69,9 @@ export class CanjesService {
         puntos_gastados: premio.costo_puntos,
         estado: EstadoCanje.PENDIENTE,
       });
-      return manager.save(canje);
+      const savedCanje = await manager.save(canje);
+
+      return { savedCanje, premioNombre: premio.nombre };
     });
 
     // Auditoría fuera de la transacción crítica
@@ -70,11 +79,11 @@ export class CanjesService {
       await this.auditoriaService.registrar({
         tabla: 'canjes',
         accion: AccionAuditoria.CREATE,
-        registro_id: saved.id,
+        registro_id: saved.savedCanje.id,
         datos_nuevos: {
           estudiante_id: dto.estudiante_id,
-          premio: premio.nombre,
-          puntos_gastados: premio.costo_puntos,
+          premio: saved.premioNombre,
+          puntos_gastados: saved.savedCanje.puntos_gastados,
           estado: EstadoCanje.PENDIENTE,
         },
         usuario_id: usuarioId,
@@ -85,7 +94,7 @@ export class CanjesService {
       console.error('Error al registrar auditoría:', err);
     }
 
-    return saved;
+    return saved.savedCanje;
   }
 
   async findAll(): Promise<Canje[]> {

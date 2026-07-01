@@ -28,6 +28,7 @@ const reportes_module_1 = require("./reportes/reportes.module");
 const backup_module_1 = require("./backup/backup.module");
 const solicitudes_password_module_1 = require("./solicitudes-password/solicitudes-password.module");
 const cursos_module_1 = require("./cursos/cursos.module");
+const version_module_1 = require("./version/version.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -69,6 +70,7 @@ exports.AppModule = AppModule = __decorate([
             backup_module_1.BackupModule,
             solicitudes_password_module_1.SolicitudesPasswordModule,
             cursos_module_1.CursosModule,
+            version_module_1.VersionModule,
         ],
         providers: [
             {

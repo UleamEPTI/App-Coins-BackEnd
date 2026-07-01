@@ -19,6 +19,7 @@ import { ReportesModule } from './reportes/reportes.module';
 import { BackupModule } from './backup/backup.module';
 import { SolicitudesPasswordModule } from './solicitudes-password/solicitudes-password.module';
 import { CursosModule } from './cursos/cursos.module';
+import { VersionModule } from './version/version.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { CursosModule } from './cursos/cursos.module';
     BackupModule,
     SolicitudesPasswordModule,
     CursosModule,
+    VersionModule,
   ],
   providers: [
     {

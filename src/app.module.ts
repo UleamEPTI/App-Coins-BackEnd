@@ -40,6 +40,11 @@ import { VersionModule } from './version/version.module';
         database: configService.get<string>('DB_NAME') ?? 'bachillero_db',
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: false,
+        extra: {
+        max: 20,        // maximo 20 conexiones simultáneas
+        min: 2,         // minimo 2 siempre activas
+        idleTimeoutMillis: 30000,
+      }
       }),
       inject: [ConfigService],
     }),

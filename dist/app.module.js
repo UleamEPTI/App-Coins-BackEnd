@@ -52,6 +52,11 @@ exports.AppModule = AppModule = __decorate([
                     database: configService.get('DB_NAME') ?? 'bachillero_db',
                     entities: [__dirname + '/**/*.entity{.ts,.js}'],
                     synchronize: false,
+                    extra: {
+                        max: 20,
+                        min: 2,
+                        idleTimeoutMillis: 30000,
+                    }
                 }),
                 inject: [config_1.ConfigService],
             }),

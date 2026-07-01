@@ -71,6 +71,7 @@ DB_NAME=bachillero_db
 JWT_SECRET=bachillero_jwt_secret_super_seguro_2026
 PORT=3000
 NODE_ENV=production
+APP_VERSION=1.0.0
 ```
 
 ### 6. Crear las tablas en la BD
@@ -86,7 +87,11 @@ CREATE TABLE roles (
   descripcion VARCHAR,
   created_at TIMESTAMP DEFAULT now()
 );
-INSERT INTO roles (nombre) VALUES ('ADMIN'), ('INSTITUCION'), ('DOCENTE'), ('ESTUDIANTE');
+INSERT INTO roles (nombre, descripcion) VALUES 
+  ('ADMIN', 'Administrador del sistema'),
+  ('INSTITUCION', 'Director o gestor de institución'),
+  ('DOCENTE', 'Profesor o encargado'),
+  ('ESTUDIANTE', 'Alumno del sistema');
 
 -- Instituciones
 CREATE TABLE instituciones (
@@ -113,6 +118,7 @@ CREATE TABLE usuarios (
   curso_id UUID,
   materia VARCHAR,
   activo BOOLEAN DEFAULT true,
+  debe_cambiar_password BOOLEAN DEFAULT true,
   created_at TIMESTAMP DEFAULT now(),
   updated_at TIMESTAMP DEFAULT now()
 );
@@ -226,17 +232,28 @@ CREATE TABLE solicitudes_password (
   updated_at TIMESTAMP DEFAULT now()
 );
 
--- Usuario ADMIN por defecto (contraseña: Admin2026)
-INSERT INTO usuarios (rol_id, nombres, apellidos, email, password_hash, activo)
+-- Índices de rendimiento (importante para carga alta)
+CREATE INDEX IF NOT EXISTS idx_estudiantes_curso ON estudiantes(curso_id);
+CREATE INDEX IF NOT EXISTS idx_estudiantes_puntos ON estudiantes(puntos DESC);
+CREATE INDEX IF NOT EXISTS idx_reciclajes_estudiante ON reciclajes(estudiante_id);
+CREATE INDEX IF NOT EXISTS idx_reciclajes_created ON reciclajes(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_historial_estudiante ON historial_puntos(estudiante_id);
+CREATE INDEX IF NOT EXISTS idx_canjes_estudiante ON canjes(estudiante_id);
+CREATE INDEX IF NOT EXISTS idx_usuarios_email ON usuarios(email);
+CREATE INDEX IF NOT EXISTS idx_cursos_institucion ON cursos(institucion_id);
+
+-- Usuario ADMIN por defecto
+INSERT INTO usuarios (rol_id, nombres, apellidos, email, password_hash, activo, debe_cambiar_password)
 VALUES (
   (SELECT id FROM roles WHERE nombre = 'ADMIN'),
   'Admin', 'Sistema', 'admin@bachillero.gob.ec',
   '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+  true,
   true
 );
 ```
 
-> ⚠️ **La contraseña del admin es: `password`** — cámbiela inmediatamente después del primer login.
+> ⚠️ **La contraseña del admin es: `password`** — el sistema obliga a cambiarla en el primer login.
 
 ### 7. Compilar y correr
 ```bash
@@ -254,12 +271,26 @@ pm2 startup
 
 ---
 
+## 🔄 Actualización del servidor (cuando hay cambios en el repo)
+
+```bash
+cd App-Coins-BackEnd
+git pull origin main
+npm install
+npm run build
+pm2 restart bachillero-backend
+```
+
+---
+
 ## 🌐 URLs disponibles
 
 | URL | Descripción |
 |---|---|
 | `http://servidor:3000/api` | API principal |
-| `http://servidor:3000/api/docs` | Documentación Swagger |
+| `http://servidor:3000/api/version` | Versión actual del backend |
+
+> ⚠️ Swagger (`/api/docs`) está deshabilitado en producción por seguridad.
 
 ---
 
@@ -270,52 +301,63 @@ pm2 startup
 | Email | `admin@bachillero.gob.ec` |
 | Contraseña | `password` |
 
-> ⚠️ Cambiar la contraseña después del primer login.
+> ⚠️ El sistema obliga a cambiar la contraseña en el primer login.
 
 ---
 
 ## 📦 Módulos disponibles
 
-| Módulo | Endpoints |
+| Módulo | Endpoints principales |
 |---|---|
-| Auth | login, profile, refresh token |
+| Auth | login, profile, refresh, cambiar-password |
+| Version | versión actual del backend |
 | Usuarios | CRUD + roles |
 | Instituciones | CRUD + dominio |
+| Cursos | CRUD por institución |
 | Estudiantes | CRUD |
 | Premios | CRUD + stock |
 | Puntos | dar/quitar + historial |
 | Canjes | canjear + estados |
 | Reciclajes | registrar + estadísticas |
-| Tipos Botella | configurar puntos |
-| Estadísticas | ranking + stats |
+| Tipos Botella | configurar puntos por institución |
+| Estadísticas | ranking + stats por institución/curso |
 | Reportes | PDF por institución/curso |
-| Auditoría | logs de acciones |
+| Auditoría | logs de todas las acciones |
 | Backup | manual + automático (2am) |
-| Solicitudes Password | flujo de cambio de contraseña |
+| Solicitudes Password | flujo de cambio de contraseña INSTITUCION/ADMIN |
 
 ---
 
 ## 🔒 Seguridad implementada
 
-- ✅ JWT con expiración
-- ✅ Refresh token
-- ✅ Bcrypt para contraseñas
-- ✅ Rate limiting (100 req/min)
-- ✅ Helmet (headers HTTP)
+- ✅ JWT con expiración + refresh token
+- ✅ Cambio de contraseña obligatorio en primer login
+- ✅ Bcrypt para contraseñas (salt rounds: 10)
+- ✅ Rate limiting (100 req/min por IP)
+- ✅ Helmet (headers de seguridad HTTP)
 - ✅ CORS configurado
 - ✅ Roles y permisos por endpoint
-- ✅ Auditoría de acciones
+- ✅ Auditoría de todas las acciones críticas
+- ✅ Transacciones atómicas en reciclajes y canjes
+- ✅ Swagger deshabilitado en producción
+
+---
+
+## ⚡ Rendimiento
+
+- ✅ Connection pooling (20 conexiones máx, 2 mínimo)
+- ✅ Índices en columnas críticas
+- ✅ Backup automático diario a las 2:00 AM
 
 ---
 
 ## 💾 Backup
 
-El sistema genera backups automáticos cada día a las 2:00 AM en la carpeta `backups/`.
+El sistema genera backups automáticos cada día a las 2:00 AM en la carpeta `backups/`. Mantiene los últimos 10 backups.
 
-Para backup manual:
 ```
-POST /api/backup/manual
-Authorization: Bearer <token-admin>
+POST /api/backup/manual        → Backup manual
+GET  /api/backup/listar        → Listar backups disponibles
 ```
 
 ---

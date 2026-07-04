@@ -3,7 +3,13 @@ import { CreateUsuarioDto } from './dto/create-usuario.dto';
 export declare class UsuariosController {
     private readonly usuariosService;
     constructor(usuariosService: UsuariosService);
-    findAll(): Promise<import("./entities/usuario.entity").Usuario[]>;
+    findAll(search?: string, rol?: string, institucion_id?: string, estado?: 'activo' | 'inactivo', page?: string, limit?: string): Promise<{
+        data: import("./entities/usuario.entity").Usuario[];
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+    }>;
     getRoles(): Promise<import("./entities/rol.entity").Rol[]>;
     findOne(id: string): Promise<import("./entities/usuario.entity").Usuario>;
     create(dto: CreateUsuarioDto): Promise<{

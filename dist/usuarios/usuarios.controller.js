@@ -25,8 +25,15 @@ let UsuariosController = class UsuariosController {
     constructor(usuariosService) {
         this.usuariosService = usuariosService;
     }
-    findAll() {
-        return this.usuariosService.findAll();
+    findAll(search, rol, institucion_id, estado, page, limit) {
+        return this.usuariosService.findAllFiltrado({
+            search,
+            rol,
+            institucion_id,
+            estado,
+            page: page ? parseInt(page) : 1,
+            limit: limit ? parseInt(limit) : 20,
+        });
     }
     getRoles() {
         return this.usuariosService.getRoles();
@@ -48,12 +55,26 @@ exports.UsuariosController = UsuariosController;
 __decorate([
     (0, roles_decorator_1.Roles)('ADMIN', 'INSTITUCION'),
     (0, common_1.Get)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Listar usuarios con filtros y paginación' }),
+    (0, swagger_1.ApiQuery)({ name: 'search', required: false, description: 'Buscar por nombre, apellido o email' }),
+    (0, swagger_1.ApiQuery)({ name: 'rol', required: false, description: 'ADMIN, INSTITUCION, DOCENTE, ESTUDIANTE' }),
+    (0, swagger_1.ApiQuery)({ name: 'institucion_id', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'estado', required: false, enum: ['activo', 'inactivo'] }),
+    (0, swagger_1.ApiQuery)({ name: 'page', required: false, description: 'Página (default: 1)' }),
+    (0, swagger_1.ApiQuery)({ name: 'limit', required: false, description: 'Resultados por página (default: 20)' }),
+    __param(0, (0, common_1.Query)('search')),
+    __param(1, (0, common_1.Query)('rol')),
+    __param(2, (0, common_1.Query)('institucion_id')),
+    __param(3, (0, common_1.Query)('estado')),
+    __param(4, (0, common_1.Query)('page')),
+    __param(5, (0, common_1.Query)('limit')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [String, String, String, String, String, String]),
     __metadata("design:returntype", void 0)
 ], UsuariosController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)('roles'),
+    (0, swagger_1.ApiOperation)({ summary: 'Obtener lista de roles' }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
@@ -61,6 +82,7 @@ __decorate([
 __decorate([
     (0, roles_decorator_1.Roles)('ADMIN', 'INSTITUCION', 'DOCENTE'),
     (0, common_1.Get)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Ver un usuario' }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -69,6 +91,7 @@ __decorate([
 __decorate([
     (0, roles_decorator_1.Roles)('ADMIN', 'INSTITUCION'),
     (0, common_1.Post)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Crear usuario' }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_usuario_dto_1.CreateUsuarioDto]),
@@ -77,6 +100,7 @@ __decorate([
 __decorate([
     (0, roles_decorator_1.Roles)('ADMIN', 'INSTITUCION'),
     (0, common_1.Put)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Actualizar usuario' }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -86,6 +110,7 @@ __decorate([
 __decorate([
     (0, roles_decorator_1.Roles)('ADMIN', 'INSTITUCION'),
     (0, common_1.Delete)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Desactivar usuario' }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),

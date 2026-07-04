@@ -111,6 +111,60 @@ export class UsuariosService {
     return this.usuarioRepository.save(usuario);
   }
 
+  async findAllFiltrado(filtros: {
+    search?: string;
+    rol?: string;
+    institucion_id?: string;
+    estado?: 'activo' | 'inactivo';
+    page?: number;
+    limit?: number;
+  } = {}) {
+    const { search, rol, institucion_id, estado, page = 1, limit = 20 } = filtros;
+
+    const query = this.usuarioRepository
+      .createQueryBuilder('u')
+      .leftJoinAndSelect('u.rol', 'r')
+      .select([
+        'u.id', 'u.nombres', 'u.apellidos', 'u.email',
+        'u.cedula', 'u.telefono', 'u.activo', 'u.materia',
+        'u.institucion_id', 'u.created_at', 'r.id', 'r.nombre',
+      ]);
+
+    if (estado === 'inactivo') {
+      query.andWhere('u.activo = false');
+    } else {
+      query.andWhere('u.activo = true');
+    }
+
+    if (rol) {
+      query.andWhere('LOWER(r.nombre) = :rol', { rol: rol.toLowerCase() });
+    }
+
+    if (institucion_id) {
+      query.andWhere('u.institucion_id = :institucion_id', { institucion_id });
+    }
+
+    if (search) {
+      query.andWhere(
+        '(LOWER(u.nombres) LIKE :search OR LOWER(u.apellidos) LIKE :search OR LOWER(u.email) LIKE :search)',
+        { search: `%${search.toLowerCase()}%` },
+      );
+    }
+
+    const skip = (page - 1) * limit;
+    query.skip(skip).take(limit).orderBy('u.apellidos', 'ASC');
+
+    const [data, total] = await query.getManyAndCount();
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
   async getRoles() {
     return this.rolRepository.find();
   }

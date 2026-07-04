@@ -6,6 +6,17 @@ import { Curso } from './entities/curso.entity';
 import { Usuario } from '../usuarios/entities/usuario.entity';
 import { CreateEstudianteDto } from './dto/create-estudiante.dto';
 
+export interface FiltrosEstudiante {
+  search?: string;
+  curso_id?: string;
+  institucion_id?: string;
+  activo?: boolean;
+  page?: number;
+  limit?: number;
+  sort?: 'apellidos' | 'puntos' | 'created_at' | 'codigo_estudiante';
+  order?: 'ASC' | 'DESC';
+}
+
 @Injectable()
 export class EstudiantesService {
   constructor(
@@ -35,11 +46,63 @@ export class EstudiantesService {
     return this.estudianteRepository.save(estudiante);
   }
 
-  async findAll(): Promise<Estudiante[]> {
-    return this.estudianteRepository.find({
-      relations: ['usuario', 'curso'],
-      where: { activo: true },
-    });
+  async findAll(filtros: FiltrosEstudiante = {}) {
+    const {
+      search,
+      curso_id,
+      institucion_id,
+      activo,
+      page = 1,
+      limit = 20,
+      sort = 'apellidos',
+      order = 'ASC',
+    } = filtros;
+
+    const query = this.estudianteRepository
+      .createQueryBuilder('e')
+      .leftJoinAndSelect('e.usuario', 'u')
+      .leftJoinAndSelect('e.curso', 'c');
+
+    if (activo !== undefined) {
+      query.andWhere('e.activo = :activo', { activo });
+    } else {
+      query.andWhere('e.activo = true');
+    }
+
+    if (curso_id) {
+      query.andWhere('e.curso_id = :curso_id', { curso_id });
+    }
+
+    if (institucion_id) {
+      query.andWhere('c.institucion_id = :institucion_id', { institucion_id });
+    }
+
+    if (search) {
+      query.andWhere(
+        '(LOWER(u.nombres) LIKE :search OR LOWER(u.apellidos) LIKE :search OR LOWER(e.codigo_estudiante) LIKE :search)',
+        { search: `%${search.toLowerCase()}%` },
+      );
+    }
+
+    const total = await query.getCount();
+
+    // Sort dinámico
+    if (sort === 'apellidos') {
+      query.orderBy('u.apellidos', order);
+    } else if (sort === 'puntos') {
+      query.orderBy('e.puntos', order);
+    } else {
+      query.orderBy(`e.${sort}`, order);
+    }
+
+    query.skip((page - 1) * limit).take(limit);
+
+    const data = await query.getMany();
+
+    return {
+      data,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    };
   }
 
   async findOne(id: string): Promise<Estudiante> {

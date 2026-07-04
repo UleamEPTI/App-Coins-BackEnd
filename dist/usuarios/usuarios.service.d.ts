@@ -49,5 +49,19 @@ export declare class UsuariosService {
         message: string;
     }>;
     save(usuario: Usuario): Promise<Usuario>;
+    findAllFiltrado(filtros?: {
+        search?: string;
+        rol?: string;
+        institucion_id?: string;
+        estado?: 'activo' | 'inactivo';
+        page?: number;
+        limit?: number;
+    }): Promise<{
+        data: Usuario[];
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+    }>;
     getRoles(): Promise<Rol[]>;
 }

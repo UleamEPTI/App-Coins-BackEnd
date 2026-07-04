@@ -43,8 +43,33 @@ let InstitucionesService = class InstitucionesService {
         });
         return saved;
     }
-    async findAll() {
-        return this.institucionRepository.find({ where: { activo: true } });
+    async findAll(filtros = {}) {
+        const { search, activo, page = 1, limit = 20, sort = 'nombre', order = 'ASC', } = filtros;
+        const query = this.institucionRepository.createQueryBuilder('i');
+        if (search) {
+            query.andWhere('(LOWER(i.nombre) LIKE :search OR LOWER(i.codigo) LIKE :search OR LOWER(i.dominio) LIKE :search)', { search: `%${search.toLowerCase()}%` });
+        }
+        if (activo !== undefined) {
+            query.andWhere('i.activo = :activo', { activo });
+        }
+        else {
+            query.andWhere('i.activo = true');
+        }
+        const total = await query.getCount();
+        query
+            .orderBy(`i.${sort}`, order)
+            .skip((page - 1) * limit)
+            .take(limit);
+        const data = await query.getMany();
+        return {
+            data,
+            meta: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit),
+            },
+        };
     }
     async findOne(id) {
         const inst = await this.institucionRepository.findOne({ where: { id } });

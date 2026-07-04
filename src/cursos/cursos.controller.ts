@@ -1,6 +1,6 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, ParseUUIDPipe, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, ParseUUIDPipe, UseGuards, Query } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CursosService } from './cursos.service';
@@ -22,9 +22,32 @@ export class CursosController {
 
   @Roles('ADMIN', 'INSTITUCION', 'DOCENTE')
   @Get()
-  @ApiOperation({ summary: 'Listar todos los cursos' })
-  findAll() {
-    return this.cursosService.findAll();
+  @ApiOperation({ summary: 'Listar cursos con filtros y paginación' })
+  @ApiQuery({ name: 'search', required: false })
+  @ApiQuery({ name: 'institucion_id', required: false })
+  @ApiQuery({ name: 'activo', required: false, type: Boolean })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'sort', required: false, enum: ['nombre', 'created_at', 'paralelo'] })
+  @ApiQuery({ name: 'order', required: false, enum: ['ASC', 'DESC'] })
+  findAll(
+    @Query('search') search?: string,
+    @Query('institucion_id') institucion_id?: string,
+    @Query('activo') activo?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('sort') sort?: 'nombre' | 'created_at' | 'paralelo',
+    @Query('order') order?: 'ASC' | 'DESC',
+  ) {
+    return this.cursosService.findAll({
+      search,
+      institucion_id,
+      activo: activo !== undefined ? activo === 'true' : undefined,
+      page: page ? parseInt(page) : 1,
+      limit: limit ? parseInt(limit) : 20,
+      sort,
+      order,
+    });
   }
 
   @Roles('ADMIN', 'INSTITUCION', 'DOCENTE')

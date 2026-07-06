@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Estudiante = void 0;
 const typeorm_1 = require("typeorm");
 const usuario_entity_1 = require("../../usuarios/entities/usuario.entity");
-const curso_entity_1 = require("./curso.entity");
+const curso_entity_1 = require("../../cursos/entities/curso.entity");
 let Estudiante = class Estudiante {
     id;
     usuario;

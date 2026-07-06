@@ -1,5 +1,5 @@
 import { Usuario } from '../../usuarios/entities/usuario.entity';
-import { Curso } from './curso.entity';
+import { Curso } from '../../cursos/entities/curso.entity';
 export declare class Estudiante {
     id: string;
     usuario: Usuario;

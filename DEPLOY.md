@@ -250,7 +250,7 @@ VALUES (
   '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
   true,
   true
-);
+); 
 ```
 
 > ⚠️ **La contraseña del admin es: `password`** — el sistema obliga a cambiarla en el primer login.

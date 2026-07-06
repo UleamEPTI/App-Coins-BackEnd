@@ -12,7 +12,7 @@ const typeorm_1 = require("@nestjs/typeorm");
 const estudiantes_service_1 = require("./estudiantes.service");
 const estudiantes_controller_1 = require("./estudiantes.controller");
 const estudiante_entity_1 = require("./entities/estudiante.entity");
-const curso_entity_1 = require("./entities/curso.entity");
+const curso_entity_1 = require("../cursos/entities/curso.entity");
 const usuario_entity_1 = require("../usuarios/entities/usuario.entity");
 let EstudiantesModule = class EstudiantesModule {
 };

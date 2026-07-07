@@ -16,16 +16,10 @@ export class TiposBotellaController {
     return this.tiposBotellaService.create(dto);
   }
 
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'INSTITUCION', 'DOCENTE')
   @Get()
   findAll() {
     return this.tiposBotellaService.findAll();
-  }
-
-  @Roles('ADMIN', 'INSTITUCION', 'DOCENTE')
-  @Get('institucion/:institucion_id')
-  findByInstitucion(@Param('institucion_id', ParseUUIDPipe) institucion_id: string) {
-    return this.tiposBotellaService.findByInstitucion(institucion_id);
   }
 
   @Roles('ADMIN', 'INSTITUCION', 'DOCENTE')

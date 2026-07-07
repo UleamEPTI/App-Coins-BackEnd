@@ -29,11 +29,6 @@ let TiposBotellaService = class TiposBotellaService {
     async findAll() {
         return this.tipoBotellaRepository.find({ where: { activo: true } });
     }
-    async findByInstitucion(institucion_id) {
-        return this.tipoBotellaRepository.find({
-            where: { institucion_id, activo: true },
-        });
-    }
     async findOne(id) {
         const tipo = await this.tipoBotellaRepository.findOne({ where: { id } });
         if (!tipo)

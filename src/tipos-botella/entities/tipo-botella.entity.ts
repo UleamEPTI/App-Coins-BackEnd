@@ -5,9 +5,6 @@ export class TipoBotella {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'institucion_id' })
-  institucion_id: string;
-
   @Column()
   tamano: string;
 

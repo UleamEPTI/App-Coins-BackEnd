@@ -20,12 +20,6 @@ export class TiposBotellaService {
     return this.tipoBotellaRepository.find({ where: { activo: true } });
   }
 
-  async findByInstitucion(institucion_id: string): Promise<TipoBotella[]> {
-    return this.tipoBotellaRepository.find({
-      where: { institucion_id, activo: true },
-    });
-  }
-
   async findOne(id: string): Promise<TipoBotella> {
     const tipo = await this.tipoBotellaRepository.findOne({ where: { id } });
     if (!tipo) throw new NotFoundException(`Tipo de botella ${id} no encontrado`);

@@ -30,9 +30,6 @@ let TiposBotellaController = class TiposBotellaController {
     findAll() {
         return this.tiposBotellaService.findAll();
     }
-    findByInstitucion(institucion_id) {
-        return this.tiposBotellaService.findByInstitucion(institucion_id);
-    }
     findOne(id) {
         return this.tiposBotellaService.findOne(id);
     }
@@ -53,20 +50,12 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], TiposBotellaController.prototype, "create", null);
 __decorate([
-    (0, roles_decorator_1.Roles)('ADMIN'),
+    (0, roles_decorator_1.Roles)('ADMIN', 'INSTITUCION', 'DOCENTE'),
     (0, common_1.Get)(),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], TiposBotellaController.prototype, "findAll", null);
-__decorate([
-    (0, roles_decorator_1.Roles)('ADMIN', 'INSTITUCION', 'DOCENTE'),
-    (0, common_1.Get)('institucion/:institucion_id'),
-    __param(0, (0, common_1.Param)('institucion_id', common_1.ParseUUIDPipe)),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
-], TiposBotellaController.prototype, "findByInstitucion", null);
 __decorate([
     (0, roles_decorator_1.Roles)('ADMIN', 'INSTITUCION', 'DOCENTE'),
     (0, common_1.Get)(':id'),

@@ -13,7 +13,6 @@ exports.TipoBotella = void 0;
 const typeorm_1 = require("typeorm");
 let TipoBotella = class TipoBotella {
     id;
-    institucion_id;
     tamano;
     puntos;
     activo;
@@ -24,10 +23,6 @@ __decorate([
     (0, typeorm_1.PrimaryGeneratedColumn)('uuid'),
     __metadata("design:type", String)
 ], TipoBotella.prototype, "id", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ name: 'institucion_id' }),
-    __metadata("design:type", String)
-], TipoBotella.prototype, "institucion_id", void 0);
 __decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", String)

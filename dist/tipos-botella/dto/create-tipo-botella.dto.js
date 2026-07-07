@@ -13,17 +13,11 @@ exports.CreateTipoBotellaDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 class CreateTipoBotellaDto {
-    institucion_id;
     tamano;
     puntos;
     activo;
 }
 exports.CreateTipoBotellaDto = CreateTipoBotellaDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'uuid-de-la-institucion' }),
-    (0, class_validator_1.IsUUID)(),
-    __metadata("design:type", String)
-], CreateTipoBotellaDto.prototype, "institucion_id", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ example: '500ml' }),
     (0, class_validator_1.IsString)(),

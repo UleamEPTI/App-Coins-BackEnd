@@ -40,4 +40,10 @@ export class ReciclajesController {
   findByCurso(@Param('curso_id', ParseUUIDPipe) curso_id: string) {
     return this.reciclajesService.findByCurso(curso_id);
   }
+
+  @Roles('ADMIN', 'INSTITUCION', 'DOCENTE')
+  @Get('docente/:registrado_por_id')
+  findByRegistradoPor(@Param('registrado_por_id', ParseUUIDPipe) registrado_por_id: string) {
+    return this.reciclajesService.findByRegistradoPor(registrado_por_id);
+  }
 }

@@ -128,4 +128,12 @@ export class ReciclajesService {
       .orderBy('r.created_at', 'DESC')
       .getMany();
   }
+
+  async findByRegistradoPor(registrado_por_id: string): Promise<Reciclaje[]> {
+    return this.reciclajeRepository.find({
+      where: { registrado_por: { id: registrado_por_id } },
+      relations: ['estudiante', 'tipo_botella'],
+      order: { created_at: 'DESC' },
+    });
+  }
 }

@@ -10,7 +10,7 @@ exports.CanjesModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const canje_entity_1 = require("./entities/canje.entity");
-const estudiante_entity_1 = require("../estudiantes/entities/estudiante.entity");
+const curso_entity_1 = require("../cursos/entities/curso.entity");
 const premio_entity_1 = require("../premios/entities/premio.entity");
 const historial_puntos_entity_1 = require("../puntos/entities/historial-puntos.entity");
 const canjes_service_1 = require("./canjes.service");
@@ -22,7 +22,7 @@ exports.CanjesModule = CanjesModule;
 exports.CanjesModule = CanjesModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([canje_entity_1.Canje, estudiante_entity_1.Estudiante, premio_entity_1.Premio, historial_puntos_entity_1.HistorialPuntos]),
+            typeorm_1.TypeOrmModule.forFeature([canje_entity_1.Canje, curso_entity_1.Curso, premio_entity_1.Premio, historial_puntos_entity_1.HistorialPuntos]),
             auditoria_module_1.AuditoriaModule,
         ],
         providers: [canjes_service_1.CanjesService],

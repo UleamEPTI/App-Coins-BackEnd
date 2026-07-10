@@ -14,17 +14,17 @@ const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 const historial_puntos_entity_1 = require("../entities/historial-puntos.entity");
 class ModificarPuntosDto {
-    estudiante_id;
+    curso_id;
     puntos;
     tipo;
     descripcion;
 }
 exports.ModificarPuntosDto = ModificarPuntosDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'uuid-del-estudiante' }),
+    (0, swagger_1.ApiProperty)({ example: 'uuid-del-curso' }),
     (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
-], ModificarPuntosDto.prototype, "estudiante_id", void 0);
+], ModificarPuntosDto.prototype, "curso_id", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ example: 50 }),
     (0, class_validator_1.IsInt)(),

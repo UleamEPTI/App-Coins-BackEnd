@@ -31,9 +31,6 @@ let ReciclajesController = class ReciclajesController {
     findAll() {
         return this.reciclajesService.findAll();
     }
-    findByEstudiante(estudiante_id) {
-        return this.reciclajesService.findByEstudiante(estudiante_id);
-    }
     findByInstitucion(institucion_id) {
         return this.reciclajesService.findByInstitucion(institucion_id);
     }
@@ -61,14 +58,6 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], ReciclajesController.prototype, "findAll", null);
-__decorate([
-    (0, roles_decorator_1.Roles)('ADMIN', 'INSTITUCION', 'DOCENTE', 'ESTUDIANTE'),
-    (0, common_1.Get)('estudiante/:estudiante_id'),
-    __param(0, (0, common_1.Param)('estudiante_id', common_1.ParseUUIDPipe)),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
-], ReciclajesController.prototype, "findByEstudiante", null);
 __decorate([
     (0, roles_decorator_1.Roles)('ADMIN', 'INSTITUCION'),
     (0, common_1.Get)('institucion/:institucion_id'),

@@ -1,4 +1,4 @@
-import { Estudiante } from '../../estudiantes/entities/estudiante.entity';
+import { Curso } from '../../cursos/entities/curso.entity';
 import { Premio } from '../../premios/entities/premio.entity';
 export declare enum EstadoCanje {
     PENDIENTE = "PENDIENTE",
@@ -7,7 +7,7 @@ export declare enum EstadoCanje {
 }
 export declare class Canje {
     id: string;
-    estudiante: Estudiante;
+    curso: Curso;
     premio: Premio;
     puntos_gastados: number;
     estado: EstadoCanje;

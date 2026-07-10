@@ -11,7 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HistorialPuntos = exports.TipoTransaccion = void 0;
 const typeorm_1 = require("typeorm");
-const estudiante_entity_1 = require("../../estudiantes/entities/estudiante.entity");
+const curso_entity_1 = require("../../cursos/entities/curso.entity");
 var TipoTransaccion;
 (function (TipoTransaccion) {
     TipoTransaccion["SUMA"] = "SUMA";
@@ -20,7 +20,7 @@ var TipoTransaccion;
 })(TipoTransaccion || (exports.TipoTransaccion = TipoTransaccion = {}));
 let HistorialPuntos = class HistorialPuntos {
     id;
-    estudiante;
+    curso;
     tipo;
     puntos;
     descripcion;
@@ -32,10 +32,10 @@ __decorate([
     __metadata("design:type", String)
 ], HistorialPuntos.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => estudiante_entity_1.Estudiante),
-    (0, typeorm_1.JoinColumn)({ name: 'estudiante_id' }),
-    __metadata("design:type", estudiante_entity_1.Estudiante)
-], HistorialPuntos.prototype, "estudiante", void 0);
+    (0, typeorm_1.ManyToOne)(() => curso_entity_1.Curso),
+    (0, typeorm_1.JoinColumn)({ name: 'curso_id' }),
+    __metadata("design:type", curso_entity_1.Curso)
+], HistorialPuntos.prototype, "curso", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'enum', enum: TipoTransaccion }),
     __metadata("design:type", String)

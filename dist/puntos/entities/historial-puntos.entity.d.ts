@@ -1,4 +1,4 @@
-import { Estudiante } from '../../estudiantes/entities/estudiante.entity';
+import { Curso } from '../../cursos/entities/curso.entity';
 export declare enum TipoTransaccion {
     SUMA = "SUMA",
     RESTA = "RESTA",
@@ -6,7 +6,7 @@ export declare enum TipoTransaccion {
 }
 export declare class HistorialPuntos {
     id: string;
-    estudiante: Estudiante;
+    curso: Curso;
     tipo: TipoTransaccion;
     puntos: number;
     descripcion: string;

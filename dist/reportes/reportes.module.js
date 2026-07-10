@@ -9,9 +9,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ReportesModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
-const estudiante_entity_1 = require("../estudiantes/entities/estudiante.entity");
+const curso_entity_1 = require("../cursos/entities/curso.entity");
 const reciclaje_entity_1 = require("../reciclajes/entities/reciclaje.entity");
-const canje_entity_1 = require("../canjes/entities/canje.entity");
 const reportes_service_1 = require("./reportes.service");
 const reportes_controller_1 = require("./reportes.controller");
 let ReportesModule = class ReportesModule {
@@ -19,7 +18,7 @@ let ReportesModule = class ReportesModule {
 exports.ReportesModule = ReportesModule;
 exports.ReportesModule = ReportesModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([estudiante_entity_1.Estudiante, reciclaje_entity_1.Reciclaje, canje_entity_1.Canje])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([curso_entity_1.Curso, reciclaje_entity_1.Reciclaje])],
         providers: [reportes_service_1.ReportesService],
         controllers: [reportes_controller_1.ReportesController],
     })

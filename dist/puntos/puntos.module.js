@@ -10,7 +10,7 @@ exports.PuntosModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const historial_puntos_entity_1 = require("./entities/historial-puntos.entity");
-const estudiante_entity_1 = require("../estudiantes/entities/estudiante.entity");
+const curso_entity_1 = require("../cursos/entities/curso.entity");
 const puntos_service_1 = require("./puntos.service");
 const puntos_controller_1 = require("./puntos.controller");
 const auditoria_module_1 = require("../auditoria/auditoria.module");
@@ -20,7 +20,7 @@ exports.PuntosModule = PuntosModule;
 exports.PuntosModule = PuntosModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([historial_puntos_entity_1.HistorialPuntos, estudiante_entity_1.Estudiante]),
+            typeorm_1.TypeOrmModule.forFeature([historial_puntos_entity_1.HistorialPuntos, curso_entity_1.Curso]),
             auditoria_module_1.AuditoriaModule,
         ],
         providers: [puntos_service_1.PuntosService],

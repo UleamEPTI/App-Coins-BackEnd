@@ -1,13 +1,12 @@
 import { Repository } from 'typeorm';
-import { Estudiante } from '../estudiantes/entities/estudiante.entity';
+import { Curso } from '../cursos/entities/curso.entity';
 import { Reciclaje } from '../reciclajes/entities/reciclaje.entity';
-import { Canje } from '../canjes/entities/canje.entity';
+export type PeriodoReporte = 'semana' | 'mes' | 'anio';
 export declare class ReportesService {
-    private readonly estudianteRepository;
+    private readonly cursoRepository;
     private readonly reciclajeRepository;
-    private readonly canjeRepository;
-    constructor(estudianteRepository: Repository<Estudiante>, reciclajeRepository: Repository<Reciclaje>, canjeRepository: Repository<Canje>);
-    generarReporteInstitucion(institucion_id: string): Promise<Buffer>;
-    generarReporteCurso(curso_id: string): Promise<Buffer>;
+    constructor(cursoRepository: Repository<Curso>, reciclajeRepository: Repository<Reciclaje>);
+    generarReporteInstitucion(institucion_id: string, periodo?: PeriodoReporte): Promise<Buffer>;
+    generarReporteCurso(curso_id: string, periodo?: PeriodoReporte): Promise<Buffer>;
     private generarPDF;
 }

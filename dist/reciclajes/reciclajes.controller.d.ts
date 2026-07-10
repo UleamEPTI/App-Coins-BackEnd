@@ -5,7 +5,6 @@ export declare class ReciclajesController {
     constructor(reciclajesService: ReciclajesService);
     registrar(dto: CreateReciclajeDto, req: any): Promise<import("./entities/reciclaje.entity").Reciclaje>;
     findAll(): Promise<import("./entities/reciclaje.entity").Reciclaje[]>;
-    findByEstudiante(estudiante_id: string): Promise<import("./entities/reciclaje.entity").Reciclaje[]>;
     findByInstitucion(institucion_id: string): Promise<import("./entities/reciclaje.entity").Reciclaje[]>;
     findByCurso(curso_id: string): Promise<import("./entities/reciclaje.entity").Reciclaje[]>;
     findByRegistradoPor(registrado_por_id: string): Promise<import("./entities/reciclaje.entity").Reciclaje[]>;

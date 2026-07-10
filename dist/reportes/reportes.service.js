@@ -16,92 +16,82 @@ exports.ReportesService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
-const estudiante_entity_1 = require("../estudiantes/entities/estudiante.entity");
+const curso_entity_1 = require("../cursos/entities/curso.entity");
 const reciclaje_entity_1 = require("../reciclajes/entities/reciclaje.entity");
-const canje_entity_1 = require("../canjes/entities/canje.entity");
 const PDFDocument = require('pdfkit');
-let ReportesService = class ReportesService {
-    estudianteRepository;
-    reciclajeRepository;
-    canjeRepository;
-    constructor(estudianteRepository, reciclajeRepository, canjeRepository) {
-        this.estudianteRepository = estudianteRepository;
-        this.reciclajeRepository = reciclajeRepository;
-        this.canjeRepository = canjeRepository;
+function fechaInicioPeriodo(periodo) {
+    if (!periodo)
+        return null;
+    const ahora = new Date();
+    if (periodo === 'semana') {
+        const inicio = new Date(ahora);
+        inicio.setDate(ahora.getDate() - 7);
+        return inicio;
     }
-    async generarReporteInstitucion(institucion_id) {
-        const estudiantes = await this.estudianteRepository
-            .createQueryBuilder('e')
-            .leftJoinAndSelect('e.usuario', 'u')
-            .leftJoinAndSelect('e.curso', 'c')
+    if (periodo === 'mes') {
+        const inicio = new Date(ahora);
+        inicio.setMonth(ahora.getMonth() - 1);
+        return inicio;
+    }
+    const inicio = new Date(ahora);
+    inicio.setFullYear(ahora.getFullYear() - 1);
+    return inicio;
+}
+let ReportesService = class ReportesService {
+    cursoRepository;
+    reciclajeRepository;
+    constructor(cursoRepository, reciclajeRepository) {
+        this.cursoRepository = cursoRepository;
+        this.reciclajeRepository = reciclajeRepository;
+    }
+    async generarReporteInstitucion(institucion_id, periodo) {
+        const cursos = await this.cursoRepository
+            .createQueryBuilder('c')
             .where('c.institucion_id = :institucion_id', { institucion_id })
-            .andWhere('e.activo = true')
-            .orderBy('e.puntos', 'DESC')
+            .andWhere('c.activo = true')
+            .orderBy('c.puntos', 'DESC')
             .getMany();
-        const reciclajes = await this.reciclajeRepository
+        const desde = fechaInicioPeriodo(periodo);
+        const reciclajesQuery = this.reciclajeRepository
             .createQueryBuilder('r')
-            .leftJoinAndSelect('r.tipo_botella', 'tb')
-            .leftJoin('r.estudiante', 'e')
-            .leftJoin('e.curso', 'c')
-            .where('c.institucion_id = :institucion_id', { institucion_id })
-            .getMany();
-        const totalBotellas = reciclajes.reduce((sum, r) => sum + r.cantidad, 0);
+            .leftJoin('r.curso', 'c')
+            .where('c.institucion_id = :institucion_id', { institucion_id });
+        if (desde)
+            reciclajesQuery.andWhere('r.created_at >= :desde', { desde });
+        const reciclajes = await reciclajesQuery.getMany();
+        const totalKilos = reciclajes.reduce((sum, r) => sum + r.kilos, 0);
         const totalPuntos = reciclajes.reduce((sum, r) => sum + r.puntos_ganados, 0);
-        const botellaPorTipo = {};
-        reciclajes.forEach(r => {
-            const tamano = r.tipo_botella?.tamano ?? 'desconocido';
-            botellaPorTipo[tamano] = (botellaPorTipo[tamano] ?? 0) + r.cantidad;
-        });
         return this.generarPDF({
             titulo: 'Reporte de Institución',
-            totalEstudiantes: estudiantes.length,
-            totalBotellas,
+            periodo,
+            totalCursos: cursos.length,
+            totalKilos,
             totalPuntos,
-            botellaPorTipo,
-            estudiantes: estudiantes.map((e, i) => ({
+            cursos: cursos.map((c, i) => ({
                 posicion: i + 1,
-                nombre: `${e.usuario?.nombres ?? ''} ${e.usuario?.apellidos ?? ''}`,
-                curso: `${e.curso?.nombre ?? ''} ${e.curso?.paralelo ?? ''}`,
-                codigo: e.codigo_estudiante ?? '-',
-                puntos: e.puntos,
+                nombre: `${c.nombre ?? ''} ${c.paralelo ?? ''}`.trim(),
+                puntos: c.puntos,
             })),
         });
     }
-    async generarReporteCurso(curso_id) {
-        const estudiantes = await this.estudianteRepository
-            .createQueryBuilder('e')
-            .leftJoinAndSelect('e.usuario', 'u')
-            .leftJoinAndSelect('e.curso', 'c')
-            .where('e.curso_id = :curso_id', { curso_id })
-            .andWhere('e.activo = true')
-            .orderBy('e.puntos', 'DESC')
-            .getMany();
-        const reciclajes = await this.reciclajeRepository
+    async generarReporteCurso(curso_id, periodo) {
+        const curso = await this.cursoRepository.findOne({ where: { id: curso_id } });
+        const desde = fechaInicioPeriodo(periodo);
+        const reciclajesQuery = this.reciclajeRepository
             .createQueryBuilder('r')
-            .leftJoinAndSelect('r.tipo_botella', 'tb')
-            .leftJoin('r.estudiante', 'e')
-            .where('e.curso_id = :curso_id', { curso_id })
-            .getMany();
-        const totalBotellas = reciclajes.reduce((sum, r) => sum + r.cantidad, 0);
+            .where('r.curso_id = :curso_id', { curso_id });
+        if (desde)
+            reciclajesQuery.andWhere('r.created_at >= :desde', { desde });
+        const reciclajes = await reciclajesQuery.getMany();
+        const totalKilos = reciclajes.reduce((sum, r) => sum + r.kilos, 0);
         const totalPuntos = reciclajes.reduce((sum, r) => sum + r.puntos_ganados, 0);
-        const botellaPorTipo = {};
-        reciclajes.forEach(r => {
-            const tamano = r.tipo_botella?.tamano ?? 'desconocido';
-            botellaPorTipo[tamano] = (botellaPorTipo[tamano] ?? 0) + r.cantidad;
-        });
-        const curso = estudiantes[0]?.curso;
         return this.generarPDF({
-            titulo: `Reporte de Curso: ${curso?.nombre ?? ''} ${curso?.paralelo ?? ''}`,
-            totalEstudiantes: estudiantes.length,
-            totalBotellas,
+            titulo: `Reporte de Curso: ${curso?.nombre ?? ''} ${curso?.paralelo ?? ''}`.trim(),
+            periodo,
+            totalCursos: 1,
+            totalKilos,
             totalPuntos,
-            botellaPorTipo,
-            estudiantes: estudiantes.map((e, i) => ({
-                posicion: i + 1,
-                nombre: `${e.usuario?.nombres ?? ''} ${e.usuario?.apellidos ?? ''}`,
-                codigo: e.codigo_estudiante ?? '-',
-                puntos: e.puntos,
-            })),
+            cursos: [{ posicion: 1, nombre: `${curso?.nombre ?? ''} ${curso?.paralelo ?? ''}`.trim(), puntos: curso?.puntos ?? 0 }],
         });
     }
     generarPDF(data) {
@@ -111,44 +101,33 @@ let ReportesService = class ReportesService {
             doc.on('data', chunk => chunks.push(chunk));
             doc.on('end', () => resolve(Buffer.concat(chunks)));
             doc.on('error', reject);
+            const periodoTexto = { semana: 'Última semana', mes: 'Último mes', anio: 'Último año' };
             doc.fontSize(20).font('Helvetica-Bold').text(data.titulo, { align: 'center' });
             doc.fontSize(11).font('Helvetica').text(`Fecha: ${new Date().toLocaleDateString('es-EC')}`, { align: 'center' });
+            if (data.periodo) {
+                doc.text(`Periodo: ${periodoTexto[data.periodo]}`, { align: 'center' });
+            }
             doc.moveDown();
             doc.fontSize(14).font('Helvetica-Bold').text('Resumen General');
             doc.moveDown(0.5);
             doc.fontSize(11).font('Helvetica');
-            doc.text(`Total Estudiantes: ${data.totalEstudiantes}`);
-            doc.text(`Total Botellas Recicladas: ${data.totalBotellas}`);
+            doc.text(`Total Cursos: ${data.totalCursos}`);
+            doc.text(`Total Kilos Reciclados: ${data.totalKilos}`);
             doc.text(`Total Puntos Generados: ${data.totalPuntos}`);
             doc.moveDown();
-            doc.fontSize(14).font('Helvetica-Bold').text('Botellas por Tipo');
-            doc.moveDown(0.5);
-            doc.fontSize(11).font('Helvetica');
-            Object.entries(data.botellaPorTipo).forEach(([tamano, cantidad]) => {
-                doc.text(`${tamano}: ${cantidad} botellas`);
-            });
-            doc.moveDown();
-            doc.fontSize(14).font('Helvetica-Bold').text('Ranking de Estudiantes');
+            doc.fontSize(14).font('Helvetica-Bold').text('Detalle por Curso');
             doc.moveDown(0.5);
             doc.fontSize(11).font('Helvetica-Bold');
             doc.text('#', 50, doc.y, { continued: true, width: 40 });
-            doc.text('Nombre', { continued: true, width: 180 });
-            if (data.estudiantes[0]?.curso !== undefined) {
-                doc.text('Curso', { continued: true, width: 120 });
-            }
-            doc.text('Código', { continued: true, width: 100 });
-            doc.text('Puntos', { width: 60 });
+            doc.text('Curso', { continued: true, width: 300 });
+            doc.text('Puntos', { width: 100 });
             doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
             doc.moveDown(0.3);
             doc.font('Helvetica').fontSize(10);
-            data.estudiantes.forEach(e => {
-                doc.text(`${e.posicion}`, 50, doc.y, { continued: true, width: 40 });
-                doc.text(e.nombre, { continued: true, width: 180 });
-                if (e.curso !== undefined) {
-                    doc.text(e.curso, { continued: true, width: 120 });
-                }
-                doc.text(e.codigo, { continued: true, width: 100 });
-                doc.text(`${e.puntos}`, { width: 60 });
+            data.cursos.forEach(c => {
+                doc.text(`${c.posicion}`, 50, doc.y, { continued: true, width: 40 });
+                doc.text(c.nombre, { continued: true, width: 300 });
+                doc.text(`${c.puntos}`, { width: 100 });
             });
             doc.end();
         });
@@ -157,11 +136,9 @@ let ReportesService = class ReportesService {
 exports.ReportesService = ReportesService;
 exports.ReportesService = ReportesService = __decorate([
     (0, common_1.Injectable)(),
-    __param(0, (0, typeorm_1.InjectRepository)(estudiante_entity_1.Estudiante)),
+    __param(0, (0, typeorm_1.InjectRepository)(curso_entity_1.Curso)),
     __param(1, (0, typeorm_1.InjectRepository)(reciclaje_entity_1.Reciclaje)),
-    __param(2, (0, typeorm_1.InjectRepository)(canje_entity_1.Canje)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
-        typeorm_2.Repository,
         typeorm_2.Repository])
 ], ReportesService);
 //# sourceMappingURL=reportes.service.js.map

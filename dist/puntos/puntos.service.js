@@ -17,35 +17,35 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const historial_puntos_entity_1 = require("./entities/historial-puntos.entity");
-const estudiante_entity_1 = require("../estudiantes/entities/estudiante.entity");
+const curso_entity_1 = require("../cursos/entities/curso.entity");
 const auditoria_service_1 = require("../auditoria/auditoria.service");
 const auditoria_entity_1 = require("../auditoria/entities/auditoria.entity");
 let PuntosService = class PuntosService {
     historialRepository;
-    estudianteRepository;
+    cursoRepository;
     auditoriaService;
-    constructor(historialRepository, estudianteRepository, auditoriaService) {
+    constructor(historialRepository, cursoRepository, auditoriaService) {
         this.historialRepository = historialRepository;
-        this.estudianteRepository = estudianteRepository;
+        this.cursoRepository = cursoRepository;
         this.auditoriaService = auditoriaService;
     }
     async modificarPuntos(dto, usuarioId, usuarioEmail, ip) {
-        const estudiante = await this.estudianteRepository.findOne({ where: { id: dto.estudiante_id } });
-        if (!estudiante)
-            throw new common_1.NotFoundException(`Estudiante ${dto.estudiante_id} no encontrado`);
-        const puntosAnteriores = estudiante.puntos;
+        const curso = await this.cursoRepository.findOne({ where: { id: dto.curso_id } });
+        if (!curso)
+            throw new common_1.NotFoundException(`Curso ${dto.curso_id} no encontrado`);
+        const puntosAnteriores = curso.puntos;
         if (dto.tipo === historial_puntos_entity_1.TipoTransaccion.RESTA || dto.tipo === historial_puntos_entity_1.TipoTransaccion.CANJE) {
-            if (estudiante.puntos < dto.puntos) {
-                throw new common_1.BadRequestException(`Puntos insuficientes. Tiene ${estudiante.puntos}, necesita ${dto.puntos}`);
+            if (curso.puntos < dto.puntos) {
+                throw new common_1.BadRequestException(`Puntos insuficientes. Tiene ${curso.puntos}, necesita ${dto.puntos}`);
             }
-            estudiante.puntos -= dto.puntos;
+            curso.puntos -= dto.puntos;
         }
         else {
-            estudiante.puntos += dto.puntos;
+            curso.puntos += dto.puntos;
         }
-        await this.estudianteRepository.save(estudiante);
+        await this.cursoRepository.save(curso);
         const transaccion = this.historialRepository.create({
-            estudiante,
+            curso,
             tipo: dto.tipo,
             puntos: dto.puntos,
             descripcion: dto.descripcion,
@@ -60,20 +60,20 @@ let PuntosService = class PuntosService {
                 tipo: dto.tipo,
                 puntos: dto.puntos,
                 descripcion: dto.descripcion,
-                puntos_resultantes: estudiante.puntos,
+                puntos_resultantes: curso.puntos,
             },
             usuario_id: usuarioId,
             usuario_email: usuarioEmail,
             ip,
         });
-        return { estudiante, transaccion };
+        return { curso, transaccion };
     }
-    async getHistorial(estudiante_id) {
-        const estudiante = await this.estudianteRepository.findOne({ where: { id: estudiante_id } });
-        if (!estudiante)
-            throw new common_1.NotFoundException(`Estudiante ${estudiante_id} no encontrado`);
+    async getHistorial(curso_id) {
+        const curso = await this.cursoRepository.findOne({ where: { id: curso_id } });
+        if (!curso)
+            throw new common_1.NotFoundException(`Curso ${curso_id} no encontrado`);
         return this.historialRepository.find({
-            where: { estudiante: { id: estudiante_id } },
+            where: { curso: { id: curso_id } },
             order: { created_at: 'DESC' },
         });
     }
@@ -82,7 +82,7 @@ exports.PuntosService = PuntosService;
 exports.PuntosService = PuntosService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(historial_puntos_entity_1.HistorialPuntos)),
-    __param(1, (0, typeorm_1.InjectRepository)(estudiante_entity_1.Estudiante)),
+    __param(1, (0, typeorm_1.InjectRepository)(curso_entity_1.Curso)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository,
         auditoria_service_1.AuditoriaService])

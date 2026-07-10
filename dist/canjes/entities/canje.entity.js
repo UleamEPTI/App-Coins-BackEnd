@@ -11,7 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Canje = exports.EstadoCanje = void 0;
 const typeorm_1 = require("typeorm");
-const estudiante_entity_1 = require("../../estudiantes/entities/estudiante.entity");
+const curso_entity_1 = require("../../cursos/entities/curso.entity");
 const premio_entity_1 = require("../../premios/entities/premio.entity");
 var EstadoCanje;
 (function (EstadoCanje) {
@@ -21,7 +21,7 @@ var EstadoCanje;
 })(EstadoCanje || (exports.EstadoCanje = EstadoCanje = {}));
 let Canje = class Canje {
     id;
-    estudiante;
+    curso;
     premio;
     puntos_gastados;
     estado;
@@ -33,10 +33,10 @@ __decorate([
     __metadata("design:type", String)
 ], Canje.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => estudiante_entity_1.Estudiante),
-    (0, typeorm_1.JoinColumn)({ name: 'estudiante_id' }),
-    __metadata("design:type", estudiante_entity_1.Estudiante)
-], Canje.prototype, "estudiante", void 0);
+    (0, typeorm_1.ManyToOne)(() => curso_entity_1.Curso),
+    (0, typeorm_1.JoinColumn)({ name: 'curso_id' }),
+    __metadata("design:type", curso_entity_1.Curso)
+], Canje.prototype, "curso", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => premio_entity_1.Premio),
     (0, typeorm_1.JoinColumn)({ name: 'premio_id' }),

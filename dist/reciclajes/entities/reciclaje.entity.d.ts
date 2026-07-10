@@ -1,12 +1,10 @@
-import { Estudiante } from '../../estudiantes/entities/estudiante.entity';
-import { TipoBotella } from '../../tipos-botella/entities/tipo-botella.entity';
+import { Curso } from '../../cursos/entities/curso.entity';
 import { Usuario } from '../../usuarios/entities/usuario.entity';
 export declare class Reciclaje {
     id: string;
-    estudiante: Estudiante;
-    tipo_botella: TipoBotella;
+    curso: Curso;
     registrado_por: Usuario;
-    cantidad: number;
+    kilos: number;
     puntos_ganados: number;
     created_at: Date;
 }

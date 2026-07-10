@@ -10,7 +10,6 @@ exports.EstudiantesModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const estudiantes_service_1 = require("./estudiantes.service");
-const estudiantes_controller_1 = require("./estudiantes.controller");
 const estudiante_entity_1 = require("./entities/estudiante.entity");
 const curso_entity_1 = require("../cursos/entities/curso.entity");
 const usuario_entity_1 = require("../usuarios/entities/usuario.entity");
@@ -21,7 +20,7 @@ exports.EstudiantesModule = EstudiantesModule = __decorate([
     (0, common_1.Module)({
         imports: [typeorm_1.TypeOrmModule.forFeature([estudiante_entity_1.Estudiante, curso_entity_1.Curso, usuario_entity_1.Usuario])],
         providers: [estudiantes_service_1.EstudiantesService],
-        controllers: [estudiantes_controller_1.EstudiantesController],
+        controllers: [],
         exports: [estudiantes_service_1.EstudiantesService],
     })
 ], EstudiantesModule);

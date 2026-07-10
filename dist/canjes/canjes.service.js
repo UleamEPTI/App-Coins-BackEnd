@@ -17,21 +17,21 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const canje_entity_1 = require("./entities/canje.entity");
-const estudiante_entity_1 = require("../estudiantes/entities/estudiante.entity");
+const curso_entity_1 = require("../cursos/entities/curso.entity");
 const premio_entity_1 = require("../premios/entities/premio.entity");
 const historial_puntos_entity_1 = require("../puntos/entities/historial-puntos.entity");
 const auditoria_service_1 = require("../auditoria/auditoria.service");
 const auditoria_entity_1 = require("../auditoria/entities/auditoria.entity");
 let CanjesService = class CanjesService {
     canjeRepository;
-    estudianteRepository;
+    cursoRepository;
     premioRepository;
     historialRepository;
     auditoriaService;
     dataSource;
-    constructor(canjeRepository, estudianteRepository, premioRepository, historialRepository, auditoriaService, dataSource) {
+    constructor(canjeRepository, cursoRepository, premioRepository, historialRepository, auditoriaService, dataSource) {
         this.canjeRepository = canjeRepository;
-        this.estudianteRepository = estudianteRepository;
+        this.cursoRepository = cursoRepository;
         this.premioRepository = premioRepository;
         this.historialRepository = historialRepository;
         this.auditoriaService = auditoriaService;
@@ -39,12 +39,12 @@ let CanjesService = class CanjesService {
     }
     async canjear(dto, usuarioId, usuarioEmail, ip) {
         const saved = await this.dataSource.transaction(async (manager) => {
-            const estudiante = await manager.findOne(estudiante_entity_1.Estudiante, {
-                where: { id: dto.estudiante_id },
+            const curso = await manager.findOne(curso_entity_1.Curso, {
+                where: { id: dto.curso_id },
                 lock: { mode: 'pessimistic_write' },
             });
-            if (!estudiante)
-                throw new common_1.NotFoundException(`Estudiante ${dto.estudiante_id} no encontrado`);
+            if (!curso)
+                throw new common_1.NotFoundException(`Curso ${dto.curso_id} no encontrado`);
             const premio = await manager.findOne(premio_entity_1.Premio, {
                 where: { id: dto.premio_id, activo: true },
                 lock: { mode: 'pessimistic_write' },
@@ -53,22 +53,22 @@ let CanjesService = class CanjesService {
                 throw new common_1.NotFoundException(`Premio ${dto.premio_id} no encontrado o inactivo`);
             if (premio.stock <= 0)
                 throw new common_1.BadRequestException('El premio no tiene stock disponible');
-            if (estudiante.puntos < premio.costo_puntos) {
-                throw new common_1.BadRequestException(`Puntos insuficientes. Tiene ${estudiante.puntos}, necesita ${premio.costo_puntos}`);
+            if (curso.puntos < premio.costo_puntos) {
+                throw new common_1.BadRequestException(`Puntos insuficientes. Tiene ${curso.puntos}, necesita ${premio.costo_puntos}`);
             }
-            estudiante.puntos -= premio.costo_puntos;
+            curso.puntos -= premio.costo_puntos;
             premio.stock -= 1;
-            await manager.save(estudiante);
+            await manager.save(curso);
             await manager.save(premio);
             const historial = manager.create(historial_puntos_entity_1.HistorialPuntos, {
-                estudiante,
+                curso,
                 tipo: historial_puntos_entity_1.TipoTransaccion.CANJE,
                 puntos: premio.costo_puntos,
                 descripcion: `Canje por premio: ${premio.nombre}`,
             });
             await manager.save(historial);
             const canje = manager.create(canje_entity_1.Canje, {
-                estudiante,
+                curso,
                 premio,
                 puntos_gastados: premio.costo_puntos,
                 estado: canje_entity_1.EstadoCanje.PENDIENTE,
@@ -82,7 +82,7 @@ let CanjesService = class CanjesService {
                 accion: auditoria_entity_1.AccionAuditoria.CREATE,
                 registro_id: saved.savedCanje.id,
                 datos_nuevos: {
-                    estudiante_id: dto.estudiante_id,
+                    curso_id: dto.curso_id,
                     premio: saved.premioNombre,
                     puntos_gastados: saved.savedCanje.puntos_gastados,
                     estado: canje_entity_1.EstadoCanje.PENDIENTE,
@@ -99,19 +99,22 @@ let CanjesService = class CanjesService {
     }
     async findAll() {
         return this.canjeRepository.find({
-            relations: ['estudiante', 'premio'],
+            relations: ['curso', 'premio'],
             order: { created_at: 'DESC' },
         });
     }
-    async findByEstudiante(estudiante_id) {
+    async findByCurso(curso_id) {
         return this.canjeRepository.find({
-            where: { estudiante: { id: estudiante_id } },
+            where: { curso: { id: curso_id } },
             relations: ['premio'],
             order: { created_at: 'DESC' },
         });
     }
     async actualizarEstado(id, estado, usuarioId, usuarioEmail, ip) {
-        const canje = await this.canjeRepository.findOne({ where: { id }, relations: ['estudiante', 'premio'] });
+        const canje = await this.canjeRepository.findOne({
+            where: { id },
+            relations: ['curso', 'premio'],
+        });
         if (!canje)
             throw new common_1.NotFoundException(`Canje ${id} no encontrado`);
         const estadoAnterior = canje.estado;
@@ -139,7 +142,7 @@ exports.CanjesService = CanjesService;
 exports.CanjesService = CanjesService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(canje_entity_1.Canje)),
-    __param(1, (0, typeorm_1.InjectRepository)(estudiante_entity_1.Estudiante)),
+    __param(1, (0, typeorm_1.InjectRepository)(curso_entity_1.Curso)),
     __param(2, (0, typeorm_1.InjectRepository)(premio_entity_1.Premio)),
     __param(3, (0, typeorm_1.InjectRepository)(historial_puntos_entity_1.HistorialPuntos)),
     __param(5, (0, typeorm_1.InjectDataSource)()),

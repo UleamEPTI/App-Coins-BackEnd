@@ -10,8 +10,7 @@ exports.ReciclajesModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const reciclaje_entity_1 = require("./entities/reciclaje.entity");
-const estudiante_entity_1 = require("../estudiantes/entities/estudiante.entity");
-const tipo_botella_entity_1 = require("../tipos-botella/entities/tipo-botella.entity");
+const curso_entity_1 = require("../cursos/entities/curso.entity");
 const usuario_entity_1 = require("../usuarios/entities/usuario.entity");
 const historial_puntos_entity_1 = require("../puntos/entities/historial-puntos.entity");
 const reciclajes_service_1 = require("./reciclajes.service");
@@ -23,7 +22,7 @@ exports.ReciclajesModule = ReciclajesModule;
 exports.ReciclajesModule = ReciclajesModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([reciclaje_entity_1.Reciclaje, estudiante_entity_1.Estudiante, tipo_botella_entity_1.TipoBotella, usuario_entity_1.Usuario, historial_puntos_entity_1.HistorialPuntos]),
+            typeorm_1.TypeOrmModule.forFeature([reciclaje_entity_1.Reciclaje, curso_entity_1.Curso, usuario_entity_1.Usuario, historial_puntos_entity_1.HistorialPuntos]),
             auditoria_module_1.AuditoriaModule,
         ],
         providers: [reciclajes_service_1.ReciclajesService],

@@ -32,8 +32,8 @@ let CanjesController = class CanjesController {
     findAll() {
         return this.canjesService.findAll();
     }
-    findByEstudiante(estudiante_id) {
-        return this.canjesService.findByEstudiante(estudiante_id);
+    findByCurso(curso_id) {
+        return this.canjesService.findByCurso(curso_id);
     }
     actualizarEstado(id, estado, req) {
         const ip = req.ip ?? req.headers['x-forwarded-for'];
@@ -42,7 +42,7 @@ let CanjesController = class CanjesController {
 };
 exports.CanjesController = CanjesController;
 __decorate([
-    (0, roles_decorator_1.Roles)('ADMIN', 'INSTITUCION', 'ESTUDIANTE'),
+    (0, roles_decorator_1.Roles)('ADMIN', 'INSTITUCION', 'DOCENTE'),
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Request)()),
@@ -58,13 +58,13 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], CanjesController.prototype, "findAll", null);
 __decorate([
-    (0, roles_decorator_1.Roles)('ADMIN', 'INSTITUCION', 'DOCENTE', 'ESTUDIANTE'),
-    (0, common_1.Get)('estudiante/:estudiante_id'),
-    __param(0, (0, common_1.Param)('estudiante_id', common_1.ParseUUIDPipe)),
+    (0, roles_decorator_1.Roles)('ADMIN', 'INSTITUCION', 'DOCENTE'),
+    (0, common_1.Get)('curso/:curso_id'),
+    __param(0, (0, common_1.Param)('curso_id', common_1.ParseUUIDPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
-], CanjesController.prototype, "findByEstudiante", null);
+], CanjesController.prototype, "findByCurso", null);
 __decorate([
     (0, roles_decorator_1.Roles)('ADMIN', 'INSTITUCION'),
     (0, common_1.Put)(':id/estado'),

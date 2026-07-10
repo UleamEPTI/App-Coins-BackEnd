@@ -23,8 +23,8 @@ let ReportesController = class ReportesController {
     constructor(reportesService) {
         this.reportesService = reportesService;
     }
-    async reporteInstitucion(institucion_id, res) {
-        const buffer = await this.reportesService.generarReporteInstitucion(institucion_id);
+    async reporteInstitucion(institucion_id, periodo, res) {
+        const buffer = await this.reportesService.generarReporteInstitucion(institucion_id, periodo);
         res.set({
             'Content-Type': 'application/pdf',
             'Content-Disposition': `attachment; filename="reporte-institucion-${institucion_id}.pdf"`,
@@ -32,8 +32,8 @@ let ReportesController = class ReportesController {
         });
         res.end(buffer);
     }
-    async reporteCurso(curso_id, res) {
-        const buffer = await this.reportesService.generarReporteCurso(curso_id);
+    async reporteCurso(curso_id, periodo, res) {
+        const buffer = await this.reportesService.generarReporteCurso(curso_id, periodo);
         res.set({
             'Content-Type': 'application/pdf',
             'Content-Disposition': `attachment; filename="reporte-curso-${curso_id}.pdf"`,
@@ -47,18 +47,20 @@ __decorate([
     (0, roles_decorator_1.Roles)('ADMIN', 'INSTITUCION'),
     (0, common_1.Get)('institucion/:institucion_id'),
     __param(0, (0, common_1.Param)('institucion_id', common_1.ParseUUIDPipe)),
-    __param(1, (0, common_1.Res)()),
+    __param(1, (0, common_1.Query)('periodo')),
+    __param(2, (0, common_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [String, String, Object]),
     __metadata("design:returntype", Promise)
 ], ReportesController.prototype, "reporteInstitucion", null);
 __decorate([
     (0, roles_decorator_1.Roles)('ADMIN', 'INSTITUCION', 'DOCENTE'),
     (0, common_1.Get)('curso/:curso_id'),
     __param(0, (0, common_1.Param)('curso_id', common_1.ParseUUIDPipe)),
-    __param(1, (0, common_1.Res)()),
+    __param(1, (0, common_1.Query)('periodo')),
+    __param(2, (0, common_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [String, String, Object]),
     __metadata("design:returntype", Promise)
 ], ReportesController.prototype, "reporteCurso", null);
 exports.ReportesController = ReportesController = __decorate([

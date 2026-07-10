@@ -1,25 +1,21 @@
 import { Repository } from 'typeorm';
-import { Estudiante } from '../estudiantes/entities/estudiante.entity';
+import { Curso } from '../cursos/entities/curso.entity';
 import { Reciclaje } from '../reciclajes/entities/reciclaje.entity';
 import { Canje } from '../canjes/entities/canje.entity';
 export declare class EstadisticasService {
-    private readonly estudianteRepository;
+    private readonly cursoRepository;
     private readonly reciclajeRepository;
     private readonly canjeRepository;
-    constructor(estudianteRepository: Repository<Estudiante>, reciclajeRepository: Repository<Reciclaje>, canjeRepository: Repository<Canje>);
-    rankingCurso(curso_id: string): Promise<Estudiante[]>;
-    rankingInstitucion(institucion_id: string): Promise<Estudiante[]>;
+    constructor(cursoRepository: Repository<Curso>, reciclajeRepository: Repository<Reciclaje>, canjeRepository: Repository<Canje>);
+    rankingInstitucion(institucion_id: string): Promise<Curso[]>;
     statsInstitucion(institucion_id: string): Promise<{
-        totalEstudiantes: number;
-        totalBotellas: number;
+        totalCursos: number;
+        totalKilos: number;
         totalPuntosGenerados: number;
         totalCanjes: number;
-        botellaPorTipo: Record<string, number>;
     }>;
     statsCurso(curso_id: string): Promise<{
-        totalEstudiantes: number;
-        totalBotellas: number;
+        totalKilos: number;
         totalPuntosGenerados: number;
-        botellaPorTipo: Record<string, number>;
     }>;
 }

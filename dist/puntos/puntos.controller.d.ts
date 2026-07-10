@@ -4,8 +4,8 @@ export declare class PuntosController {
     private readonly puntosService;
     constructor(puntosService: PuntosService);
     modificar(dto: ModificarPuntosDto, req: any): Promise<{
-        estudiante: import("../estudiantes/entities/estudiante.entity").Estudiante;
+        curso: import("../cursos/entities/curso.entity").Curso;
         transaccion: import("./entities/historial-puntos.entity").HistorialPuntos;
     }>;
-    historial(estudiante_id: string): Promise<import("./entities/historial-puntos.entity").HistorialPuntos[]>;
+    historial(curso_id: string): Promise<import("./entities/historial-puntos.entity").HistorialPuntos[]>;
 }

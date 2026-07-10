@@ -28,8 +28,8 @@ let PuntosController = class PuntosController {
         const ip = req.ip ?? req.headers['x-forwarded-for'];
         return this.puntosService.modificarPuntos(dto, req.user.id, req.user.email, ip);
     }
-    historial(estudiante_id) {
-        return this.puntosService.getHistorial(estudiante_id);
+    historial(curso_id) {
+        return this.puntosService.getHistorial(curso_id);
     }
 };
 exports.PuntosController = PuntosController;
@@ -43,9 +43,9 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], PuntosController.prototype, "modificar", null);
 __decorate([
-    (0, roles_decorator_1.Roles)('ADMIN', 'INSTITUCION', 'DOCENTE', 'ESTUDIANTE'),
-    (0, common_1.Get)('historial/:estudiante_id'),
-    __param(0, (0, common_1.Param)('estudiante_id', common_1.ParseUUIDPipe)),
+    (0, roles_decorator_1.Roles)('ADMIN', 'INSTITUCION', 'DOCENTE'),
+    (0, common_1.Get)('historial/:curso_id'),
+    __param(0, (0, common_1.Param)('curso_id', common_1.ParseUUIDPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)

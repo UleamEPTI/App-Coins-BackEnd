@@ -13,25 +13,19 @@ exports.CreateReciclajeDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 class CreateReciclajeDto {
-    estudiante_id;
-    tipo_botella_id;
-    cantidad;
+    curso_id;
+    kilos;
 }
 exports.CreateReciclajeDto = CreateReciclajeDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'uuid-del-estudiante' }),
+    (0, swagger_1.ApiProperty)({ example: 'uuid-del-curso' }),
     (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
-], CreateReciclajeDto.prototype, "estudiante_id", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'uuid-del-tipo-botella' }),
-    (0, class_validator_1.IsUUID)(),
-    __metadata("design:type", String)
-], CreateReciclajeDto.prototype, "tipo_botella_id", void 0);
+], CreateReciclajeDto.prototype, "curso_id", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ example: 5 }),
     (0, class_validator_1.IsInt)(),
     (0, class_validator_1.Min)(1),
     __metadata("design:type", Number)
-], CreateReciclajeDto.prototype, "cantidad", void 0);
+], CreateReciclajeDto.prototype, "kilos", void 0);
 //# sourceMappingURL=create-reciclaje.dto.js.map

@@ -10,13 +10,11 @@ exports.AuthModule = void 0;
 const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const passport_1 = require("@nestjs/passport");
-const typeorm_1 = require("@nestjs/typeorm");
+const config_1 = require("@nestjs/config");
 const auth_service_1 = require("./auth.service");
 const auth_controller_1 = require("./auth.controller");
 const usuarios_module_1 = require("../usuarios/usuarios.module");
 const jwt_strategy_1 = require("./strategies/jwt.strategy");
-const estudiante_entity_1 = require("../estudiantes/entities/estudiante.entity");
-const reciclaje_entity_1 = require("../reciclajes/entities/reciclaje.entity");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
@@ -25,10 +23,13 @@ exports.AuthModule = AuthModule = __decorate([
         imports: [
             usuarios_module_1.UsuariosModule,
             passport_1.PassportModule,
-            typeorm_1.TypeOrmModule.forFeature([estudiante_entity_1.Estudiante, reciclaje_entity_1.Reciclaje]),
-            jwt_1.JwtModule.register({
-                secret: process.env.JWT_SECRET ?? 'secret',
-                signOptions: { expiresIn: '24h' },
+            jwt_1.JwtModule.registerAsync({
+                imports: [config_1.ConfigModule],
+                useFactory: (configService) => ({
+                    secret: configService.get('JWT_SECRET') ?? 'secret',
+                    signOptions: { expiresIn: '24h' },
+                }),
+                inject: [config_1.ConfigService],
             }),
         ],
         providers: [auth_service_1.AuthService, jwt_strategy_1.JwtStrategy],

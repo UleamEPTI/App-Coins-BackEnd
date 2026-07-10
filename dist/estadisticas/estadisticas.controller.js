@@ -32,9 +32,6 @@ let EstadisticasController = class EstadisticasController {
     rankingInstitucion(institucion_id) {
         return this.estadisticasService.rankingInstitucion(institucion_id);
     }
-    rankingCurso(curso_id) {
-        return this.estadisticasService.rankingCurso(curso_id);
-    }
 };
 exports.EstadisticasController = EstadisticasController;
 __decorate([
@@ -54,21 +51,13 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], EstadisticasController.prototype, "statsCurso", null);
 __decorate([
-    (0, roles_decorator_1.Roles)('ADMIN', 'INSTITUCION'),
+    (0, roles_decorator_1.Roles)('ADMIN', 'INSTITUCION', 'DOCENTE'),
     (0, common_1.Get)('ranking/institucion/:institucion_id'),
     __param(0, (0, common_1.Param)('institucion_id', common_1.ParseUUIDPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], EstadisticasController.prototype, "rankingInstitucion", null);
-__decorate([
-    (0, roles_decorator_1.Roles)('ADMIN', 'INSTITUCION', 'DOCENTE', 'ESTUDIANTE'),
-    (0, common_1.Get)('ranking/curso/:curso_id'),
-    __param(0, (0, common_1.Param)('curso_id', common_1.ParseUUIDPipe)),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
-], EstadisticasController.prototype, "rankingCurso", null);
 exports.EstadisticasController = EstadisticasController = __decorate([
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard),
     (0, common_1.Controller)('estadisticas'),

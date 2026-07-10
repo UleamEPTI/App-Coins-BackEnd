@@ -11,15 +11,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Reciclaje = void 0;
 const typeorm_1 = require("typeorm");
-const estudiante_entity_1 = require("../../estudiantes/entities/estudiante.entity");
-const tipo_botella_entity_1 = require("../../tipos-botella/entities/tipo-botella.entity");
+const curso_entity_1 = require("../../cursos/entities/curso.entity");
 const usuario_entity_1 = require("../../usuarios/entities/usuario.entity");
 let Reciclaje = class Reciclaje {
     id;
-    estudiante;
-    tipo_botella;
+    curso;
     registrado_por;
-    cantidad;
+    kilos;
     puntos_ganados;
     created_at;
 };
@@ -29,24 +27,19 @@ __decorate([
     __metadata("design:type", String)
 ], Reciclaje.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => estudiante_entity_1.Estudiante),
-    (0, typeorm_1.JoinColumn)({ name: 'estudiante_id' }),
-    __metadata("design:type", estudiante_entity_1.Estudiante)
-], Reciclaje.prototype, "estudiante", void 0);
-__decorate([
-    (0, typeorm_1.ManyToOne)(() => tipo_botella_entity_1.TipoBotella),
-    (0, typeorm_1.JoinColumn)({ name: 'tipo_botella_id' }),
-    __metadata("design:type", tipo_botella_entity_1.TipoBotella)
-], Reciclaje.prototype, "tipo_botella", void 0);
+    (0, typeorm_1.ManyToOne)(() => curso_entity_1.Curso),
+    (0, typeorm_1.JoinColumn)({ name: 'curso_id' }),
+    __metadata("design:type", curso_entity_1.Curso)
+], Reciclaje.prototype, "curso", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => usuario_entity_1.Usuario),
     (0, typeorm_1.JoinColumn)({ name: 'registrado_por' }),
     __metadata("design:type", usuario_entity_1.Usuario)
 ], Reciclaje.prototype, "registrado_por", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ default: 1 }),
+    (0, typeorm_1.Column)(),
     __metadata("design:type", Number)
-], Reciclaje.prototype, "cantidad", void 0);
+], Reciclaje.prototype, "kilos", void 0);
 __decorate([
     (0, typeorm_1.Column)({ name: 'puntos_ganados' }),
     __metadata("design:type", Number)

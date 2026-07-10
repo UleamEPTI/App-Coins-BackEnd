@@ -12,14 +12,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateCanjeDto = void 0;
 const class_validator_1 = require("class-validator");
 class CreateCanjeDto {
-    estudiante_id;
+    curso_id;
     premio_id;
 }
 exports.CreateCanjeDto = CreateCanjeDto;
 __decorate([
     (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
-], CreateCanjeDto.prototype, "estudiante_id", void 0);
+], CreateCanjeDto.prototype, "curso_id", void 0);
 __decorate([
     (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)

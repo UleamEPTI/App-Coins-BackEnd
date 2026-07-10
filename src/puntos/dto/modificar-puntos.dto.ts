@@ -3,9 +3,14 @@ import { IsUUID, IsInt, IsOptional, IsString, IsEnum, Min } from 'class-validato
 import { TipoTransaccion } from '../entities/historial-puntos.entity';
 
 export class ModificarPuntosDto {
-  @ApiProperty({ example: 'uuid-del-estudiante' })
+  // COMENTADO: antes era estudiante_id, ahora es curso_id.
+  // @ApiProperty({ example: 'uuid-del-estudiante' })
+  // @IsUUID()
+  // estudiante_id: string;
+
+  @ApiProperty({ example: 'uuid-del-curso' })
   @IsUUID()
-  estudiante_id: string;
+  curso_id: string;
 
   @ApiProperty({ example: 50 })
   @IsInt()

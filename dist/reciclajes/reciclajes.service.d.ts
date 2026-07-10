@@ -20,4 +20,5 @@ export declare class ReciclajesService {
     findByEstudiante(estudiante_id: string): Promise<Reciclaje[]>;
     findByInstitucion(institucion_id: string): Promise<Reciclaje[]>;
     findByCurso(curso_id: string): Promise<Reciclaje[]>;
+    findByRegistradoPor(registrado_por_id: string): Promise<Reciclaje[]>;
 }

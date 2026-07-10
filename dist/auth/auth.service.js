@@ -8,18 +8,29 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const bcrypt = require("bcryptjs");
+const typeorm_1 = require("@nestjs/typeorm");
+const typeorm_2 = require("typeorm");
 const usuarios_service_1 = require("../usuarios/usuarios.service");
+const estudiante_entity_1 = require("../estudiantes/entities/estudiante.entity");
+const reciclaje_entity_1 = require("../reciclajes/entities/reciclaje.entity");
 let AuthService = class AuthService {
     usuariosService;
     jwtService;
-    constructor(usuariosService, jwtService) {
+    estudianteRepository;
+    reciclajeRepository;
+    constructor(usuariosService, jwtService, estudianteRepository, reciclajeRepository) {
         this.usuariosService = usuariosService;
         this.jwtService = jwtService;
+        this.estudianteRepository = estudianteRepository;
+        this.reciclajeRepository = reciclajeRepository;
     }
     async login(loginDto) {
         const { email, password } = loginDto;
@@ -34,6 +45,7 @@ let AuthService = class AuthService {
         if (!passwordValida) {
             throw new common_1.UnauthorizedException('Credenciales incorrectas');
         }
+        const profile = await this.buildProfilePayload(usuario);
         const payload = {
             sub: usuario.id,
             email: usuario.email,
@@ -41,14 +53,7 @@ let AuthService = class AuthService {
         };
         return {
             access_token: this.jwtService.sign(payload),
-            usuario: {
-                id: usuario.id,
-                nombres: usuario.nombres,
-                apellidos: usuario.apellidos,
-                email: usuario.email,
-                rol: usuario.rol.nombre,
-                debe_cambiar_password: usuario.debe_cambiar_password,
-            },
+            usuario: profile,
         };
     }
     async getProfile(userId) {
@@ -56,21 +61,14 @@ let AuthService = class AuthService {
         if (!usuario) {
             throw new common_1.UnauthorizedException('Usuario no encontrado');
         }
-        return {
-            id: usuario.id,
-            nombres: usuario.nombres,
-            apellidos: usuario.apellidos,
-            email: usuario.email,
-            rol: usuario.rol.nombre,
-            activo: usuario.activo,
-            debe_cambiar_password: usuario.debe_cambiar_password,
-        };
+        return this.buildProfilePayload(usuario);
     }
     async refreshToken(userId) {
         const usuario = await this.usuariosService.findById(userId);
         if (!usuario || !usuario.activo) {
             throw new common_1.UnauthorizedException('Usuario no válido');
         }
+        const profile = await this.buildProfilePayload(usuario);
         const payload = {
             sub: usuario.id,
             email: usuario.email,
@@ -78,14 +76,52 @@ let AuthService = class AuthService {
         };
         return {
             access_token: this.jwtService.sign(payload),
-            usuario: {
-                id: usuario.id,
-                nombres: usuario.nombres,
-                apellidos: usuario.apellidos,
-                email: usuario.email,
-                rol: usuario.rol.nombre,
-                debe_cambiar_password: usuario.debe_cambiar_password,
-            },
+            usuario: profile,
+        };
+    }
+    async buildProfilePayload(usuario) {
+        const baseProfile = {
+            id: usuario.id,
+            nombres: usuario.nombres,
+            apellidos: usuario.apellidos,
+            email: usuario.email,
+            rol: usuario.rol,
+            activo: usuario.activo,
+            debe_cambiar_password: usuario.debe_cambiar_password,
+            institucion_id: usuario.institucion_id,
+            curso_id: usuario.curso_id,
+        };
+        if (usuario.rol?.nombre !== 'ESTUDIANTE') {
+            return baseProfile;
+        }
+        const estudiante = await this.estudianteRepository.findOne({
+            where: { usuario: { id: usuario.id } },
+            relations: ['curso'],
+        });
+        if (!estudiante) {
+            return baseProfile;
+        }
+        const totalBottlesResult = await this.reciclajeRepository
+            .createQueryBuilder('r')
+            .select('COALESCE(SUM(r.cantidad), 0)', 'total')
+            .where('r.estudiante_id = :estudianteId', { estudianteId: estudiante.id })
+            .getRawOne();
+        const totalBottles = Number(totalBottlesResult?.total ?? 0);
+        return {
+            ...baseProfile,
+            id: estudiante.id,
+            codigo_estudiante: estudiante.codigo_estudiante,
+            puntos: estudiante.puntos,
+            totalBottles,
+            curso: estudiante.curso
+                ? {
+                    id: estudiante.curso.id,
+                    nombre: estudiante.curso.nombre,
+                    institucion_id: estudiante.curso.institucion_id,
+                }
+                : null,
+            curso_id: estudiante.curso?.id ?? usuario.curso_id,
+            institucion_id: estudiante.curso?.institucion_id ?? usuario.institucion_id,
         };
     }
     async cambiarPasswordPropia(userId, passwordActual, passwordNueva) {
@@ -106,7 +142,11 @@ let AuthService = class AuthService {
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
+    __param(2, (0, typeorm_1.InjectRepository)(estudiante_entity_1.Estudiante)),
+    __param(3, (0, typeorm_1.InjectRepository)(reciclaje_entity_1.Reciclaje)),
     __metadata("design:paramtypes", [usuarios_service_1.UsuariosService,
-        jwt_1.JwtService])
+        jwt_1.JwtService,
+        typeorm_2.Repository,
+        typeorm_2.Repository])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

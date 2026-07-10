@@ -23,11 +23,12 @@ export class ReciclajesController {
     return this.reciclajesService.findAll();
   }
 
-  @Roles('ADMIN', 'INSTITUCION', 'DOCENTE', 'ESTUDIANTE')
-  @Get('estudiante/:estudiante_id')
-  findByEstudiante(@Param('estudiante_id', ParseUUIDPipe) estudiante_id: string) {
-    return this.reciclajesService.findByEstudiante(estudiante_id);
-  }
+  // COMENTADO: ya no existe estudiante individual, ahora se consulta por curso.
+  // @Roles('ADMIN', 'INSTITUCION', 'DOCENTE', 'ESTUDIANTE')
+  // @Get('estudiante/:estudiante_id')
+  // findByEstudiante(@Param('estudiante_id', ParseUUIDPipe) estudiante_id: string) {
+  //   return this.reciclajesService.findByEstudiante(estudiante_id);
+  // }
 
   @Roles('ADMIN', 'INSTITUCION')
   @Get('institucion/:institucion_id')

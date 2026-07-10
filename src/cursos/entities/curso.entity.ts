@@ -15,15 +15,17 @@ export class Curso {
   @Column({ nullable: true })
   descripcion: string;
 
+  @ManyToOne(() => Institucion)
+  @JoinColumn({ name: 'institucion_id' })
+  institucion_id: string;
+
   @Column({ default: true })
   activo: boolean;
 
-  @ManyToOne(() => Institucion)
-  @JoinColumn({ name: 'institucion_id' })
-  institucion: Institucion;
-
-  @Column({ name: 'institucion_id' })
-  institucion_id: string;
+  // NUEVO: el curso ahora acumula la moneda directamente (antes era
+  // Estudiante quien tenía este campo).
+  @Column({ default: 0 })
+  puntos: number;
 
   @CreateDateColumn({ name: 'created_at' })
   created_at: Date;

@@ -11,7 +11,10 @@ import { EstadoCanje } from './entities/canje.entity';
 export class CanjesController {
   constructor(private readonly canjesService: CanjesService) {}
 
-  @Roles('ADMIN', 'INSTITUCION', 'ESTUDIANTE')
+  // COMENTADO: antes el rol ESTUDIANTE podía canjear directamente.
+  // Ahora es el docente el que canjea en nombre del curso.
+  // @Roles('ADMIN', 'INSTITUCION', 'ESTUDIANTE')
+  @Roles('ADMIN', 'INSTITUCION', 'DOCENTE')
   @Post()
   canjear(@Body() dto: CreateCanjeDto, @Request() req: any) {
     const ip = req.ip ?? req.headers['x-forwarded-for'];
@@ -24,10 +27,17 @@ export class CanjesController {
     return this.canjesService.findAll();
   }
 
-  @Roles('ADMIN', 'INSTITUCION', 'DOCENTE', 'ESTUDIANTE')
-  @Get('estudiante/:estudiante_id')
-  findByEstudiante(@Param('estudiante_id', ParseUUIDPipe) estudiante_id: string) {
-    return this.canjesService.findByEstudiante(estudiante_id);
+  // COMENTADO: ya no existe estudiante individual, reemplazado por findByCurso.
+  // @Roles('ADMIN', 'INSTITUCION', 'DOCENTE', 'ESTUDIANTE')
+  // @Get('estudiante/:estudiante_id')
+  // findByEstudiante(@Param('estudiante_id', ParseUUIDPipe) estudiante_id: string) {
+  //   return this.canjesService.findByEstudiante(estudiante_id);
+  // }
+
+  @Roles('ADMIN', 'INSTITUCION', 'DOCENTE')
+  @Get('curso/:curso_id')
+  findByCurso(@Param('curso_id', ParseUUIDPipe) curso_id: string) {
+    return this.canjesService.findByCurso(curso_id);
   }
 
   @Roles('ADMIN', 'INSTITUCION')

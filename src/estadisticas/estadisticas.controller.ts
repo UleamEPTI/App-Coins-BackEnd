@@ -21,15 +21,20 @@ export class EstadisticasController {
     return this.estadisticasService.statsCurso(curso_id);
   }
 
-  @Roles('ADMIN', 'INSTITUCION')
+  // Ranking de cursos: ahora por institución, visible para los 3 roles
+  // (antes era por estudiante y se había planteado quitarlo).
+  @Roles('ADMIN', 'INSTITUCION', 'DOCENTE')
   @Get('ranking/institucion/:institucion_id')
   rankingInstitucion(@Param('institucion_id', ParseUUIDPipe) institucion_id: string) {
     return this.estadisticasService.rankingInstitucion(institucion_id);
   }
 
-  @Roles('ADMIN', 'INSTITUCION', 'DOCENTE', 'ESTUDIANTE')
-  @Get('ranking/curso/:curso_id')
-  rankingCurso(@Param('curso_id', ParseUUIDPipe) curso_id: string) {
-    return this.estadisticasService.rankingCurso(curso_id);
-  }
+  // COMENTADO: ranking por curso individual ya no aplica (un curso no
+  // rankea "dentro de sí mismo"); el ranking ahora es de cursos entre sí
+  // dentro de una institución, ver rankingInstitucion arriba.
+  // @Roles('ADMIN', 'INSTITUCION', 'DOCENTE')
+  // @Get('ranking/curso/:curso_id')
+  // rankingCurso(@Param('curso_id', ParseUUIDPipe) curso_id: string) {
+  //   return this.estadisticasService.rankingCurso(curso_id);
+  // }
 }

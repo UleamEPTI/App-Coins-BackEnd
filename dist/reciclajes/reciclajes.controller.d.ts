@@ -8,4 +8,5 @@ export declare class ReciclajesController {
     findByEstudiante(estudiante_id: string): Promise<import("./entities/reciclaje.entity").Reciclaje[]>;
     findByInstitucion(institucion_id: string): Promise<import("./entities/reciclaje.entity").Reciclaje[]>;
     findByCurso(curso_id: string): Promise<import("./entities/reciclaje.entity").Reciclaje[]>;
+    findByRegistradoPor(registrado_por_id: string): Promise<import("./entities/reciclaje.entity").Reciclaje[]>;
 }

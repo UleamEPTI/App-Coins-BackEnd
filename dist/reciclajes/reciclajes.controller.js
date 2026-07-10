@@ -40,6 +40,9 @@ let ReciclajesController = class ReciclajesController {
     findByCurso(curso_id) {
         return this.reciclajesService.findByCurso(curso_id);
     }
+    findByRegistradoPor(registrado_por_id) {
+        return this.reciclajesService.findByRegistradoPor(registrado_por_id);
+    }
 };
 exports.ReciclajesController = ReciclajesController;
 __decorate([
@@ -82,6 +85,14 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], ReciclajesController.prototype, "findByCurso", null);
+__decorate([
+    (0, roles_decorator_1.Roles)('ADMIN', 'INSTITUCION', 'DOCENTE'),
+    (0, common_1.Get)('docente/:registrado_por_id'),
+    __param(0, (0, common_1.Param)('registrado_por_id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ReciclajesController.prototype, "findByRegistradoPor", null);
 exports.ReciclajesController = ReciclajesController = __decorate([
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard),
     (0, common_1.Controller)('reciclajes'),

@@ -1,22 +1,26 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { UsuariosService } from '../usuarios/usuarios.service';
-import { Estudiante } from '../estudiantes/entities/estudiante.entity';
-import { Reciclaje } from '../reciclajes/entities/reciclaje.entity';
 import { LoginDto } from './dto/login.dto';
+// COMENTADO: Bachillero pidió quitar el perfil individual de estudiante
+// (con puntos, curso, totalBottles). Se deja el import por si se reactiva
+// para otra institución.
+// import { Estudiante } from '../estudiantes/entities/estudiante.entity';
+// import { Reciclaje } from '../reciclajes/entities/reciclaje.entity';
+// import { InjectRepository } from '@nestjs/typeorm';
+// import { Repository } from 'typeorm';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usuariosService: UsuariosService,
     private jwtService: JwtService,
-    @InjectRepository(Estudiante)
-    private readonly estudianteRepository: Repository<Estudiante>,
-    @InjectRepository(Reciclaje)
-    private readonly reciclajeRepository: Repository<Reciclaje>,
+    // COMENTADO: ya no se inyecta Estudiante ni Reciclaje.
+    // @InjectRepository(Estudiante)
+    // private readonly estudianteRepository: Repository<Estudiante>,
+    // @InjectRepository(Reciclaje)
+    // private readonly reciclajeRepository: Repository<Reciclaje>,
   ) {}
 
   async login(loginDto: LoginDto) {
@@ -85,50 +89,57 @@ export class AuthService {
       nombres: usuario.nombres,
       apellidos: usuario.apellidos,
       email: usuario.email,
-      rol: usuario.rol,
+      rol: usuario.rol.nombre,
       activo: usuario.activo,
       debe_cambiar_password: usuario.debe_cambiar_password,
       institucion_id: usuario.institucion_id,
       curso_id: usuario.curso_id,
     };
 
-    if (usuario.rol?.nombre !== 'ESTUDIANTE') {
-      return baseProfile;
-    }
+    // COMENTADO: Bachillero pidió quitar el perfil individual de estudiante
+    // (puntos, curso, totalBottles). Ya no aplica: el cliente ahora es el
+    // curso, no el estudiante. Se deja el bloque por si se reactiva para
+    // otra institución que sí maneje estudiante individual.
+    //
+    // if (usuario.rol?.nombre !== 'ESTUDIANTE') {
+    //   return baseProfile;
+    // }
+    //
+    // const estudiante = await this.estudianteRepository.findOne({
+    //   where: { usuario: { id: usuario.id } },
+    //   relations: ['curso'],
+    // });
+    //
+    // if (!estudiante) {
+    //   return baseProfile;
+    // }
+    //
+    // const totalBottlesResult = await this.reciclajeRepository
+    //   .createQueryBuilder('r')
+    //   .select('COALESCE(SUM(r.cantidad), 0)', 'total')
+    //   .where('r.estudiante_id = :estudianteId', { estudianteId: estudiante.id })
+    //   .getRawOne<{ total: string | number }>();
+    //
+    // const totalBottles = Number(totalBottlesResult?.total ?? 0);
+    //
+    // return {
+    //   ...baseProfile,
+    //   id: estudiante.id,
+    //   codigo_estudiante: estudiante.codigo_estudiante,
+    //   puntos: estudiante.puntos,
+    //   totalBottles,
+    //   curso: estudiante.curso
+    //     ? {
+    //         id: estudiante.curso.id,
+    //         nombre: estudiante.curso.nombre,
+    //         institucion_id: estudiante.curso.institucion_id,
+    //       }
+    //     : null,
+    //   curso_id: estudiante.curso?.id ?? usuario.curso_id,
+    //   institucion_id: estudiante.curso?.institucion_id ?? usuario.institucion_id,
+    // };
 
-    const estudiante = await this.estudianteRepository.findOne({
-      where: { usuario: { id: usuario.id } },
-      relations: ['curso'],
-    });
-
-    if (!estudiante) {
-      return baseProfile;
-    }
-
-    const totalBottlesResult = await this.reciclajeRepository
-      .createQueryBuilder('r')
-      .select('COALESCE(SUM(r.cantidad), 0)', 'total')
-      .where('r.estudiante_id = :estudianteId', { estudianteId: estudiante.id })
-      .getRawOne<{ total: string | number }>();
-
-    const totalBottles = Number(totalBottlesResult?.total ?? 0);
-
-    return {
-      ...baseProfile,
-      id: estudiante.id,
-      codigo_estudiante: estudiante.codigo_estudiante,
-      puntos: estudiante.puntos,
-      totalBottles,
-      curso: estudiante.curso
-        ? {
-            id: estudiante.curso.id,
-            nombre: estudiante.curso.nombre,
-            institucion_id: estudiante.curso.institucion_id,
-          }
-        : null,
-      curso_id: estudiante.curso?.id ?? usuario.curso_id,
-      institucion_id: estudiante.curso?.institucion_id ?? usuario.institucion_id,
-    };
+    return baseProfile;
   }
 
   async cambiarPasswordPropia(userId: string, passwordActual: string, passwordNueva: string) {

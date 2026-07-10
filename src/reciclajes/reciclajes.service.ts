@@ -3,23 +3,32 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Reciclaje } from './entities/reciclaje.entity';
-import { Estudiante } from '../estudiantes/entities/estudiante.entity';
-import { TipoBotella } from '../tipos-botella/entities/tipo-botella.entity';
+import { Curso } from '../cursos/entities/curso.entity';
 import { Usuario } from '../usuarios/entities/usuario.entity';
 import { HistorialPuntos, TipoTransaccion } from '../puntos/entities/historial-puntos.entity';
 import { CreateReciclajeDto } from './dto/create-reciclaje.dto';
 import { AuditoriaService } from '../auditoria/auditoria.service';
 import { AccionAuditoria } from '../auditoria/entities/auditoria.entity';
+// COMENTADO: ya no se usan, ver reemplazo por Curso más abajo.
+// import { Estudiante } from '../estudiantes/entities/estudiante.entity';
+// import { TipoBotella } from '../tipos-botella/entities/tipo-botella.entity';
+
+// TODO: 1 kilo = 1 moneda es un valor temporal. Reemplazar cuando Bachillero
+// envíe la tabla de conversión oficial (puede variar por tipo de material).
+const KILOS_A_MONEDAS = 1;
 
 @Injectable()
 export class ReciclajesService {
   constructor(
     @InjectRepository(Reciclaje)
     private readonly reciclajeRepository: Repository<Reciclaje>,
-    @InjectRepository(Estudiante)
-    private readonly estudianteRepository: Repository<Estudiante>,
-    @InjectRepository(TipoBotella)
-    private readonly tipoBotellaRepository: Repository<TipoBotella>,
+    // COMENTADO: antes inyectaba Estudiante y TipoBotella, ahora solo Curso.
+    // @InjectRepository(Estudiante)
+    // private readonly estudianteRepository: Repository<Estudiante>,
+    // @InjectRepository(TipoBotella)
+    // private readonly tipoBotellaRepository: Repository<TipoBotella>,
+    @InjectRepository(Curso)
+    private readonly cursoRepository: Repository<Curso>,
     @InjectRepository(Usuario)
     private readonly usuarioRepository: Repository<Usuario>,
     @InjectRepository(HistorialPuntos)
@@ -30,11 +39,15 @@ export class ReciclajesService {
   ) {}
 
   async registrar(dto: CreateReciclajeDto, registradoPorId: string, ip?: string): Promise<Reciclaje> {
-    const estudiante = await this.estudianteRepository.findOne({ where: { id: dto.estudiante_id } });
-    if (!estudiante) throw new NotFoundException(`Estudiante ${dto.estudiante_id} no encontrado`);
+    // COMENTADO: antes buscaba Estudiante y TipoBotella por separado.
+    // const estudiante = await this.estudianteRepository.findOne({ where: { id: dto.estudiante_id } });
+    // if (!estudiante) throw new NotFoundException(`Estudiante ${dto.estudiante_id} no encontrado`);
+    //
+    // const tipoBotella = await this.tipoBotellaRepository.findOne({ where: { id: dto.tipo_botella_id, activo: true } });
+    // if (!tipoBotella) throw new NotFoundException(`Tipo de botella ${dto.tipo_botella_id} no encontrado`);
 
-    const tipoBotella = await this.tipoBotellaRepository.findOne({ where: { id: dto.tipo_botella_id, activo: true } });
-    if (!tipoBotella) throw new NotFoundException(`Tipo de botella ${dto.tipo_botella_id} no encontrado`);
+    const curso = await this.cursoRepository.findOne({ where: { id: dto.curso_id } });
+    if (!curso) throw new NotFoundException(`Curso ${dto.curso_id} no encontrado`);
 
     const registradoPor = await this.usuarioRepository.findOne({
       where: { id: registradoPorId },
@@ -42,26 +55,38 @@ export class ReciclajesService {
     });
     if (!registradoPor) throw new NotFoundException(`Usuario ${registradoPorId} no encontrado`);
 
-    const puntosGanados = tipoBotella.puntos * dto.cantidad;
+    // COMENTADO: antes se multiplicaba tipoBotella.puntos * dto.cantidad.
+    // const puntosGanados = tipoBotella.puntos * dto.cantidad;
+    const puntosGanados = dto.kilos * KILOS_A_MONEDAS;
 
     // Todo dentro de una sola transacción: si algo falla, se revierte todo
     const saved = await this.dataSource.transaction(async (manager) => {
-      estudiante.puntos += puntosGanados;
-      await manager.save(estudiante);
+      // COMENTADO: antes sumaba puntos al estudiante.
+      // estudiante.puntos += puntosGanados;
+      // await manager.save(estudiante);
+      curso.puntos += puntosGanados;
+      await manager.save(curso);
 
       const historial = manager.create(HistorialPuntos, {
-        estudiante,
+        // COMENTADO: antes se guardaba estudiante en vez de curso.
+        // estudiante,
+        curso,
         tipo: TipoTransaccion.SUMA,
         puntos: puntosGanados,
-        descripcion: `Reciclaje: ${dto.cantidad} botella(s) de ${tipoBotella.tamano}`,
+        // COMENTADO: antes describía botellas por tamaño.
+        // descripcion: `Reciclaje: ${dto.cantidad} botella(s) de ${tipoBotella.tamano}`,
+        descripcion: `Reciclaje: ${dto.kilos} kilo(s)`,
       });
       await manager.save(historial);
 
       const reciclaje = manager.create(Reciclaje, {
-        estudiante,
-        tipo_botella: tipoBotella,
+        // COMENTADO: antes guardaba estudiante y tipo_botella.
+        // estudiante,
+        // tipo_botella: tipoBotella,
+        // cantidad: dto.cantidad,
+        curso,
         registrado_por: registradoPor,
-        cantidad: dto.cantidad,
+        kilos: dto.kilos,
         puntos_ganados: puntosGanados,
       });
       return manager.save(reciclaje);
@@ -74,9 +99,12 @@ export class ReciclajesService {
         accion: AccionAuditoria.CREATE,
         registro_id: saved.id,
         datos_nuevos: {
-          estudiante_id: dto.estudiante_id,
-          tipo_botella: tipoBotella.tamano,
-          cantidad: dto.cantidad,
+          // COMENTADO: antes registraba estudiante_id, tipo_botella, cantidad.
+          // estudiante_id: dto.estudiante_id,
+          // tipo_botella: tipoBotella.tamano,
+          // cantidad: dto.cantidad,
+          curso_id: dto.curso_id,
+          kilos: dto.kilos,
           puntos_ganados: puntosGanados,
         },
         usuario_id: registradoPorId,
@@ -93,46 +121,60 @@ export class ReciclajesService {
 
   async findAll(): Promise<Reciclaje[]> {
     return this.reciclajeRepository.find({
-      relations: ['estudiante', 'tipo_botella', 'registrado_por'],
+      // COMENTADO: antes incluía 'estudiante' y 'tipo_botella'.
+      // relations: ['estudiante', 'tipo_botella', 'registrado_por'],
+      relations: ['curso', 'registrado_por'],
       order: { created_at: 'DESC' },
     });
   }
 
-  async findByEstudiante(estudiante_id: string): Promise<Reciclaje[]> {
-    return this.reciclajeRepository.find({
-      where: { estudiante: { id: estudiante_id } },
-      relations: ['tipo_botella'],
-      order: { created_at: 'DESC' },
-    });
-  }
+  // COMENTADO: ya no existe estudiante individual, se reemplaza por findByCurso.
+  // async findByEstudiante(estudiante_id: string): Promise<Reciclaje[]> {
+  //   return this.reciclajeRepository.find({
+  //     where: { estudiante: { id: estudiante_id } },
+  //     relations: ['tipo_botella'],
+  //     order: { created_at: 'DESC' },
+  //   });
+  // }
 
   async findByInstitucion(institucion_id: string): Promise<Reciclaje[]> {
     return this.reciclajeRepository
       .createQueryBuilder('r')
-      .leftJoinAndSelect('r.estudiante', 'e')
-      .leftJoinAndSelect('r.tipo_botella', 'tb')
+      // COMENTADO: antes hacía join con estudiante -> curso; ahora curso es directo.
+      // .leftJoinAndSelect('r.estudiante', 'e')
+      // .leftJoinAndSelect('r.tipo_botella', 'tb')
+      // .leftJoinAndSelect('r.registrado_por', 'u')
+      // .leftJoinAndSelect('e.curso', 'c')
+      .leftJoinAndSelect('r.curso', 'c')
       .leftJoinAndSelect('r.registrado_por', 'u')
-      .leftJoinAndSelect('e.curso', 'c')
       .where('c.institucion_id = :institucion_id', { institucion_id })
       .orderBy('r.created_at', 'DESC')
       .getMany();
   }
 
   async findByCurso(curso_id: string): Promise<Reciclaje[]> {
-    return this.reciclajeRepository
-      .createQueryBuilder('r')
-      .leftJoinAndSelect('r.estudiante', 'e')
-      .leftJoinAndSelect('r.tipo_botella', 'tb')
-      .leftJoinAndSelect('e.curso', 'c')
-      .where('e.curso_id = :curso_id', { curso_id })
-      .orderBy('r.created_at', 'DESC')
-      .getMany();
+    // COMENTADO: antes hacía join con estudiante -> curso_id.
+    // return this.reciclajeRepository
+    //   .createQueryBuilder('r')
+    //   .leftJoinAndSelect('r.estudiante', 'e')
+    //   .leftJoinAndSelect('r.tipo_botella', 'tb')
+    //   .leftJoinAndSelect('e.curso', 'c')
+    //   .where('e.curso_id = :curso_id', { curso_id })
+    //   .orderBy('r.created_at', 'DESC')
+    //   .getMany();
+    return this.reciclajeRepository.find({
+      where: { curso: { id: curso_id } },
+      relations: ['registrado_por'],
+      order: { created_at: 'DESC' },
+    });
   }
 
   async findByRegistradoPor(registrado_por_id: string): Promise<Reciclaje[]> {
     return this.reciclajeRepository.find({
       where: { registrado_por: { id: registrado_por_id } },
-      relations: ['estudiante', 'tipo_botella'],
+      // COMENTADO: antes incluía 'estudiante' y 'tipo_botella'.
+      // relations: ['estudiante', 'tipo_botella'],
+      relations: ['curso'],
       order: { created_at: 'DESC' },
     });
   }

@@ -17,9 +17,18 @@ export class PuntosController {
     return this.puntosService.modificarPuntos(dto, req.user.id, req.user.email, ip);
   }
 
-  @Roles('ADMIN', 'INSTITUCION', 'DOCENTE', 'ESTUDIANTE')
-  @Get('historial/:estudiante_id')
-  historial(@Param('estudiante_id', ParseUUIDPipe) estudiante_id: string) {
-    return this.puntosService.getHistorial(estudiante_id);
+  // COMENTADO: antes la ruta y el rol ESTUDIANTE aplicaban a un estudiante
+  // individual. Ahora el parámetro es curso_id y ya no hay rol ESTUDIANTE
+  // consultando su propio historial.
+  // @Roles('ADMIN', 'INSTITUCION', 'DOCENTE', 'ESTUDIANTE')
+  // @Get('historial/:estudiante_id')
+  // historial(@Param('estudiante_id', ParseUUIDPipe) estudiante_id: string) {
+  //   return this.puntosService.getHistorial(estudiante_id);
+  // }
+
+  @Roles('ADMIN', 'INSTITUCION', 'DOCENTE')
+  @Get('historial/:curso_id')
+  historial(@Param('curso_id', ParseUUIDPipe) curso_id: string) {
+    return this.puntosService.getHistorial(curso_id);
   }
 }

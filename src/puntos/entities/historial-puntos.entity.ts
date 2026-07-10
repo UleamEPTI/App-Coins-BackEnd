@@ -1,5 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
-import { Estudiante } from '../../estudiantes/entities/estudiante.entity';
+import { Curso } from '../../cursos/entities/curso.entity';
+// COMENTADO: antes apuntaba a Estudiante, ahora apunta a Curso.
+// import { Estudiante } from '../../estudiantes/entities/estudiante.entity';
 
 export enum TipoTransaccion {
   SUMA = 'SUMA',
@@ -12,9 +14,14 @@ export class HistorialPuntos {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Estudiante)
-  @JoinColumn({ name: 'estudiante_id' })
-  estudiante: Estudiante;
+  // COMENTADO: antes apuntaba a Estudiante.
+  // @ManyToOne(() => Estudiante)
+  // @JoinColumn({ name: 'estudiante_id' })
+  // estudiante: Estudiante;
+
+  @ManyToOne(() => Curso)
+  @JoinColumn({ name: 'curso_id' })
+  curso: Curso;
 
   @Column({ type: 'enum', enum: TipoTransaccion })
   tipo: TipoTransaccion;

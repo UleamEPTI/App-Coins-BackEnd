@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { HistorialPuntos, TipoTransaccion } from './entities/historial-puntos.entity';
 import { Curso } from '../cursos/entities/curso.entity';
 import { ModificarPuntosDto } from './dto/modificar-puntos.dto';
@@ -20,6 +20,8 @@ export class PuntosService {
     @InjectRepository(Curso)
     private readonly cursoRepository: Repository<Curso>,
     private readonly auditoriaService: AuditoriaService,
+    @InjectDataSource()
+    private readonly dataSource: DataSource,
   ) {}
 
   async modificarPuntos(dto: ModificarPuntosDto, usuarioId?: string, usuarioEmail?: string, ip?: string) {
@@ -27,57 +29,74 @@ export class PuntosService {
     // const estudiante = await this.estudianteRepository.findOne({ where: { id: dto.estudiante_id } });
     // if (!estudiante) throw new NotFoundException(`Estudiante ${dto.estudiante_id} no encontrado`);
 
-    const curso = await this.cursoRepository.findOne({ where: { id: dto.curso_id } });
-    if (!curso) throw new NotFoundException(`Curso ${dto.curso_id} no encontrado`);
+    // FIX: todo el cambio de saldo va dentro de una transacción con lock
+    // pesimista sobre el curso, igual que en canjes.service.ts, para que
+    // dos ajustes de puntos simultáneos sobre el mismo curso no se pisen
+    // (antes se leía el curso, se modificaba en memoria y se guardaba sin
+    // ningún bloqueo, lo que podía perder un incremento/decremento si dos
+    // peticiones llegaban casi al mismo tiempo).
+    const { curso, puntosAnteriores, transaccion } = await this.dataSource.transaction(async (manager) => {
+      const curso = await manager.findOne(Curso, {
+        where: { id: dto.curso_id },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!curso) throw new NotFoundException(`Curso ${dto.curso_id} no encontrado`);
 
-    // COMENTADO: antes usaba estudiante.puntos.
-    // const puntosAnteriores = estudiante.puntos;
-    const puntosAnteriores = curso.puntos;
+      // COMENTADO: antes usaba estudiante.puntos.
+      // const puntosAnteriores = estudiante.puntos;
+      const puntosAnteriores = curso.puntos;
 
-    if (dto.tipo === TipoTransaccion.RESTA || dto.tipo === TipoTransaccion.CANJE) {
-      // COMENTADO: antes validaba/restaba sobre estudiante.
-      // if (estudiante.puntos < dto.puntos) {
-      //   throw new BadRequestException(`Puntos insuficientes. Tiene ${estudiante.puntos}, necesita ${dto.puntos}`);
-      // }
-      // estudiante.puntos -= dto.puntos;
-      if (curso.puntos < dto.puntos) {
-        throw new BadRequestException(`Puntos insuficientes. Tiene ${curso.puntos}, necesita ${dto.puntos}`);
+      if (dto.tipo === TipoTransaccion.RESTA || dto.tipo === TipoTransaccion.CANJE) {
+        // COMENTADO: antes validaba/restaba sobre estudiante.
+        // if (estudiante.puntos < dto.puntos) {
+        //   throw new BadRequestException(`Puntos insuficientes. Tiene ${estudiante.puntos}, necesita ${dto.puntos}`);
+        // }
+        // estudiante.puntos -= dto.puntos;
+        if (curso.puntos < dto.puntos) {
+          throw new BadRequestException(`Puntos insuficientes. Tiene ${curso.puntos}, necesita ${dto.puntos}`);
+        }
+        curso.puntos -= dto.puntos;
+      } else {
+        // COMENTADO: estudiante.puntos += dto.puntos;
+        curso.puntos += dto.puntos;
       }
-      curso.puntos -= dto.puntos;
-    } else {
-      // COMENTADO: estudiante.puntos += dto.puntos;
-      curso.puntos += dto.puntos;
-    }
 
-    // COMENTADO: await this.estudianteRepository.save(estudiante);
-    await this.cursoRepository.save(curso);
+      // COMENTADO: await this.estudianteRepository.save(estudiante);
+      await manager.save(curso);
 
-    const transaccion = this.historialRepository.create({
-      // COMENTADO: estudiante,
-      curso,
-      tipo: dto.tipo,
-      puntos: dto.puntos,
-      descripcion: dto.descripcion,
-    });
-    await this.historialRepository.save(transaccion);
-
-    // Auditoría
-    await this.auditoriaService.registrar({
-      tabla: 'historial_puntos',
-      accion: AccionAuditoria.CREATE,
-      registro_id: transaccion.id,
-      datos_anteriores: { puntos: puntosAnteriores },
-      datos_nuevos: {
+      const transaccion = manager.create(HistorialPuntos, {
+        // COMENTADO: estudiante,
+        curso,
         tipo: dto.tipo,
         puntos: dto.puntos,
         descripcion: dto.descripcion,
-        // COMENTADO: puntos_resultantes: estudiante.puntos,
-        puntos_resultantes: curso.puntos,
-      },
-      usuario_id: usuarioId,
-      usuario_email: usuarioEmail,
-      ip,
+      });
+      await manager.save(transaccion);
+
+      return { curso, puntosAnteriores, transaccion };
     });
+
+    // Auditoría fuera de la transacción crítica (no debe bloquear el ajuste si falla)
+    try {
+      await this.auditoriaService.registrar({
+        tabla: 'historial_puntos',
+        accion: AccionAuditoria.CREATE,
+        registro_id: transaccion.id,
+        datos_anteriores: { puntos: puntosAnteriores },
+        datos_nuevos: {
+          tipo: dto.tipo,
+          puntos: dto.puntos,
+          descripcion: dto.descripcion,
+          // COMENTADO: puntos_resultantes: estudiante.puntos,
+          puntos_resultantes: curso.puntos,
+        },
+        usuario_id: usuarioId,
+        usuario_email: usuarioEmail,
+        ip,
+      });
+    } catch (err) {
+      console.error('Error al registrar auditoría:', err);
+    }
 
     // COMENTADO: return { estudiante, transaccion };
     return { curso, transaccion };

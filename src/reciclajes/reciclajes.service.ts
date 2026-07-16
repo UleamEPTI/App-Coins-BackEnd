@@ -27,8 +27,11 @@ export class ReciclajesService {
     // private readonly estudianteRepository: Repository<Estudiante>,
     // @InjectRepository(TipoBotella)
     // private readonly tipoBotellaRepository: Repository<TipoBotella>,
-    @InjectRepository(Curso)
-    private readonly cursoRepository: Repository<Curso>,
+    // COMENTADO: ya no se usa este repo directo; el curso ahora se busca
+    // dentro de la transacción vía manager.findOne con lock pesimista
+    // (ver método registrar), para evitar la condición de carrera.
+    // @InjectRepository(Curso)
+    // private readonly cursoRepository: Repository<Curso>,
     @InjectRepository(Usuario)
     private readonly usuarioRepository: Repository<Usuario>,
     @InjectRepository(HistorialPuntos)
@@ -46,9 +49,6 @@ export class ReciclajesService {
     // const tipoBotella = await this.tipoBotellaRepository.findOne({ where: { id: dto.tipo_botella_id, activo: true } });
     // if (!tipoBotella) throw new NotFoundException(`Tipo de botella ${dto.tipo_botella_id} no encontrado`);
 
-    const curso = await this.cursoRepository.findOne({ where: { id: dto.curso_id } });
-    if (!curso) throw new NotFoundException(`Curso ${dto.curso_id} no encontrado`);
-
     const registradoPor = await this.usuarioRepository.findOne({
       where: { id: registradoPorId },
       select: ['id', 'nombres', 'apellidos', 'email'],
@@ -59,8 +59,18 @@ export class ReciclajesService {
     // const puntosGanados = tipoBotella.puntos * dto.cantidad;
     const puntosGanados = dto.kilos * KILOS_A_MONEDAS;
 
-    // Todo dentro de una sola transacción: si algo falla, se revierte todo
+    // Todo dentro de una sola transacción: si algo falla, se revierte todo.
+    // FIX: el curso se busca DENTRO de la transacción con lock pesimista,
+    // para que dos registros simultáneos sobre el mismo curso no se pisen
+    // el saldo de puntos (antes se leía el curso fuera del lock y podía
+    // perderse un incremento si dos personas registraban al mismo tiempo).
     const saved = await this.dataSource.transaction(async (manager) => {
+      const curso = await manager.findOne(Curso, {
+        where: { id: dto.curso_id },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!curso) throw new NotFoundException(`Curso ${dto.curso_id} no encontrado`);
+
       // COMENTADO: antes sumaba puntos al estudiante.
       // estudiante.puntos += puntosGanados;
       // await manager.save(estudiante);

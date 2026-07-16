@@ -24,48 +24,61 @@ let PuntosService = class PuntosService {
     historialRepository;
     cursoRepository;
     auditoriaService;
-    constructor(historialRepository, cursoRepository, auditoriaService) {
+    dataSource;
+    constructor(historialRepository, cursoRepository, auditoriaService, dataSource) {
         this.historialRepository = historialRepository;
         this.cursoRepository = cursoRepository;
         this.auditoriaService = auditoriaService;
+        this.dataSource = dataSource;
     }
     async modificarPuntos(dto, usuarioId, usuarioEmail, ip) {
-        const curso = await this.cursoRepository.findOne({ where: { id: dto.curso_id } });
-        if (!curso)
-            throw new common_1.NotFoundException(`Curso ${dto.curso_id} no encontrado`);
-        const puntosAnteriores = curso.puntos;
-        if (dto.tipo === historial_puntos_entity_1.TipoTransaccion.RESTA || dto.tipo === historial_puntos_entity_1.TipoTransaccion.CANJE) {
-            if (curso.puntos < dto.puntos) {
-                throw new common_1.BadRequestException(`Puntos insuficientes. Tiene ${curso.puntos}, necesita ${dto.puntos}`);
+        const { curso, puntosAnteriores, transaccion } = await this.dataSource.transaction(async (manager) => {
+            const curso = await manager.findOne(curso_entity_1.Curso, {
+                where: { id: dto.curso_id },
+                lock: { mode: 'pessimistic_write' },
+            });
+            if (!curso)
+                throw new common_1.NotFoundException(`Curso ${dto.curso_id} no encontrado`);
+            const puntosAnteriores = curso.puntos;
+            if (dto.tipo === historial_puntos_entity_1.TipoTransaccion.RESTA || dto.tipo === historial_puntos_entity_1.TipoTransaccion.CANJE) {
+                if (curso.puntos < dto.puntos) {
+                    throw new common_1.BadRequestException(`Puntos insuficientes. Tiene ${curso.puntos}, necesita ${dto.puntos}`);
+                }
+                curso.puntos -= dto.puntos;
             }
-            curso.puntos -= dto.puntos;
-        }
-        else {
-            curso.puntos += dto.puntos;
-        }
-        await this.cursoRepository.save(curso);
-        const transaccion = this.historialRepository.create({
-            curso,
-            tipo: dto.tipo,
-            puntos: dto.puntos,
-            descripcion: dto.descripcion,
-        });
-        await this.historialRepository.save(transaccion);
-        await this.auditoriaService.registrar({
-            tabla: 'historial_puntos',
-            accion: auditoria_entity_1.AccionAuditoria.CREATE,
-            registro_id: transaccion.id,
-            datos_anteriores: { puntos: puntosAnteriores },
-            datos_nuevos: {
+            else {
+                curso.puntos += dto.puntos;
+            }
+            await manager.save(curso);
+            const transaccion = manager.create(historial_puntos_entity_1.HistorialPuntos, {
+                curso,
                 tipo: dto.tipo,
                 puntos: dto.puntos,
                 descripcion: dto.descripcion,
-                puntos_resultantes: curso.puntos,
-            },
-            usuario_id: usuarioId,
-            usuario_email: usuarioEmail,
-            ip,
+            });
+            await manager.save(transaccion);
+            return { curso, puntosAnteriores, transaccion };
         });
+        try {
+            await this.auditoriaService.registrar({
+                tabla: 'historial_puntos',
+                accion: auditoria_entity_1.AccionAuditoria.CREATE,
+                registro_id: transaccion.id,
+                datos_anteriores: { puntos: puntosAnteriores },
+                datos_nuevos: {
+                    tipo: dto.tipo,
+                    puntos: dto.puntos,
+                    descripcion: dto.descripcion,
+                    puntos_resultantes: curso.puntos,
+                },
+                usuario_id: usuarioId,
+                usuario_email: usuarioEmail,
+                ip,
+            });
+        }
+        catch (err) {
+            console.error('Error al registrar auditoría:', err);
+        }
         return { curso, transaccion };
     }
     async getHistorial(curso_id) {
@@ -83,8 +96,10 @@ exports.PuntosService = PuntosService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(historial_puntos_entity_1.HistorialPuntos)),
     __param(1, (0, typeorm_1.InjectRepository)(curso_entity_1.Curso)),
+    __param(3, (0, typeorm_1.InjectDataSource)()),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository,
-        auditoria_service_1.AuditoriaService])
+        auditoria_service_1.AuditoriaService,
+        typeorm_2.DataSource])
 ], PuntosService);
 //# sourceMappingURL=puntos.service.js.map

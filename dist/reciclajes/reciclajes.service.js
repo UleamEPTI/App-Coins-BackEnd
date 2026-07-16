@@ -26,23 +26,18 @@ const auditoria_entity_1 = require("../auditoria/entities/auditoria.entity");
 const KILOS_A_MONEDAS = 1;
 let ReciclajesService = class ReciclajesService {
     reciclajeRepository;
-    cursoRepository;
     usuarioRepository;
     historialRepository;
     auditoriaService;
     dataSource;
-    constructor(reciclajeRepository, cursoRepository, usuarioRepository, historialRepository, auditoriaService, dataSource) {
+    constructor(reciclajeRepository, usuarioRepository, historialRepository, auditoriaService, dataSource) {
         this.reciclajeRepository = reciclajeRepository;
-        this.cursoRepository = cursoRepository;
         this.usuarioRepository = usuarioRepository;
         this.historialRepository = historialRepository;
         this.auditoriaService = auditoriaService;
         this.dataSource = dataSource;
     }
     async registrar(dto, registradoPorId, ip) {
-        const curso = await this.cursoRepository.findOne({ where: { id: dto.curso_id } });
-        if (!curso)
-            throw new common_1.NotFoundException(`Curso ${dto.curso_id} no encontrado`);
         const registradoPor = await this.usuarioRepository.findOne({
             where: { id: registradoPorId },
             select: ['id', 'nombres', 'apellidos', 'email'],
@@ -51,6 +46,12 @@ let ReciclajesService = class ReciclajesService {
             throw new common_1.NotFoundException(`Usuario ${registradoPorId} no encontrado`);
         const puntosGanados = dto.kilos * KILOS_A_MONEDAS;
         const saved = await this.dataSource.transaction(async (manager) => {
+            const curso = await manager.findOne(curso_entity_1.Curso, {
+                where: { id: dto.curso_id },
+                lock: { mode: 'pessimistic_write' },
+            });
+            if (!curso)
+                throw new common_1.NotFoundException(`Curso ${dto.curso_id} no encontrado`);
             curso.puntos += puntosGanados;
             await manager.save(curso);
             const historial = manager.create(historial_puntos_entity_1.HistorialPuntos, {
@@ -122,12 +123,10 @@ exports.ReciclajesService = ReciclajesService;
 exports.ReciclajesService = ReciclajesService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(reciclaje_entity_1.Reciclaje)),
-    __param(1, (0, typeorm_1.InjectRepository)(curso_entity_1.Curso)),
-    __param(2, (0, typeorm_1.InjectRepository)(usuario_entity_1.Usuario)),
-    __param(3, (0, typeorm_1.InjectRepository)(historial_puntos_entity_1.HistorialPuntos)),
-    __param(5, (0, typeorm_2.InjectDataSource)()),
+    __param(1, (0, typeorm_1.InjectRepository)(usuario_entity_1.Usuario)),
+    __param(2, (0, typeorm_1.InjectRepository)(historial_puntos_entity_1.HistorialPuntos)),
+    __param(4, (0, typeorm_2.InjectDataSource)()),
     __metadata("design:paramtypes", [typeorm_3.Repository,
-        typeorm_3.Repository,
         typeorm_3.Repository,
         typeorm_3.Repository,
         auditoria_service_1.AuditoriaService,

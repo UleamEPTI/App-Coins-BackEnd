@@ -14,7 +14,7 @@ export class ReciclajesController {
   @Post()
   registrar(@Body() dto: CreateReciclajeDto, @Request() req: any) {
     const ip = req.ip ?? req.headers['x-forwarded-for'];
-    return this.reciclajesService.registrar(dto, req.user.id, ip);
+    return this.reciclajesService.registrar(dto, req.user.id, req.user.rol, req.user.institucion_id, ip);
   }
 
   @Roles('ADMIN')
@@ -32,14 +32,14 @@ export class ReciclajesController {
 
   @Roles('ADMIN', 'INSTITUCION')
   @Get('institucion/:institucion_id')
-  findByInstitucion(@Param('institucion_id', ParseUUIDPipe) institucion_id: string) {
-    return this.reciclajesService.findByInstitucion(institucion_id);
+  findByInstitucion(@Param('institucion_id', ParseUUIDPipe) institucion_id: string, @Request() req: any) {
+    return this.reciclajesService.findByInstitucion(institucion_id, req.user.rol, req.user.institucion_id);
   }
 
   @Roles('ADMIN', 'INSTITUCION', 'DOCENTE')
   @Get('curso/:curso_id')
-  findByCurso(@Param('curso_id', ParseUUIDPipe) curso_id: string) {
-    return this.reciclajesService.findByCurso(curso_id);
+  findByCurso(@Param('curso_id', ParseUUIDPipe) curso_id: string, @Request() req: any) {
+    return this.reciclajesService.findByCurso(curso_id, req.user.rol, req.user.institucion_id);
   }
 
   @Roles('ADMIN', 'INSTITUCION', 'DOCENTE')

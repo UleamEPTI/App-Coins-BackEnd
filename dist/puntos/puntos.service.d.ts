@@ -9,9 +9,9 @@ export declare class PuntosService {
     private readonly auditoriaService;
     private readonly dataSource;
     constructor(historialRepository: Repository<HistorialPuntos>, cursoRepository: Repository<Curso>, auditoriaService: AuditoriaService, dataSource: DataSource);
-    modificarPuntos(dto: ModificarPuntosDto, usuarioId?: string, usuarioEmail?: string, ip?: string): Promise<{
+    modificarPuntos(dto: ModificarPuntosDto, usuarioId?: string, usuarioEmail?: string, usuarioRol?: string, usuarioInstitucionId?: string | null, ip?: string): Promise<{
         curso: Curso;
         transaccion: HistorialPuntos;
     }>;
-    getHistorial(curso_id: string): Promise<HistorialPuntos[]>;
+    getHistorial(curso_id: string, usuarioRol?: string, usuarioInstitucionId?: string | null): Promise<HistorialPuntos[]>;
 }

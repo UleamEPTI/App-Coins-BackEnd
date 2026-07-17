@@ -39,6 +39,7 @@ let AuthService = class AuthService {
             sub: usuario.id,
             email: usuario.email,
             rol: usuario.rol.nombre,
+            institucion_id: usuario.institucion_id ?? null,
         };
         return {
             access_token: this.jwtService.sign(payload),
@@ -62,6 +63,7 @@ let AuthService = class AuthService {
             sub: usuario.id,
             email: usuario.email,
             rol: usuario.rol.nombre,
+            institucion_id: usuario.institucion_id ?? null,
         };
         return {
             access_token: this.jwtService.sign(payload),

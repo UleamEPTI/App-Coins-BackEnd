@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Curso } from '../cursos/entities/curso.entity';
@@ -45,7 +45,17 @@ export class ReportesService {
     // private readonly canjeRepository: Repository<Canje>,
   ) {}
 
-  async generarReporteInstitucion(institucion_id: string, periodo?: PeriodoReporte): Promise<Buffer> {
+  async generarReporteInstitucion(
+    institucion_id: string,
+    periodo?: PeriodoReporte,
+    usuarioRol?: string,
+    usuarioInstitucionId?: string | null,
+  ): Promise<Buffer> {
+    // NUEVO: si no es ADMIN y pide una institución que no es la suya, se niega.
+    if (usuarioRol && usuarioRol !== 'ADMIN' && institucion_id !== usuarioInstitucionId) {
+      throw new ForbiddenException('No tienes permiso para generar el reporte de esta institución');
+    }
+
     // COMENTADO (versión anterior, por estudiante):
     // const estudiantes = await this.estudianteRepository
     //   .createQueryBuilder('e')
@@ -116,7 +126,21 @@ export class ReportesService {
     });
   }
 
-  async generarReporteCurso(curso_id: string, periodo?: PeriodoReporte): Promise<Buffer> {
+  async generarReporteCurso(
+    curso_id: string,
+    periodo?: PeriodoReporte,
+    usuarioRol?: string,
+    usuarioInstitucionId?: string | null,
+  ): Promise<Buffer> {
+    // NUEVO: si no es ADMIN, valida que el curso pertenezca a su institución.
+    if (usuarioRol && usuarioRol !== 'ADMIN') {
+      const pertenece = await this.cursoRepository
+        .createQueryBuilder('c')
+        .where('c.id = :curso_id AND c.institucion_id = :institucion_id', { curso_id, institucion_id: usuarioInstitucionId })
+        .getExists();
+      if (!pertenece) throw new NotFoundException(`Curso ${curso_id} no encontrado`);
+    }
+
     // COMENTADO (versión anterior, por estudiante dentro de un curso):
     // const estudiantes = await this.estudianteRepository
     //   .createQueryBuilder('e')

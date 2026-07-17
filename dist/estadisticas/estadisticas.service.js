@@ -28,7 +28,10 @@ let EstadisticasService = class EstadisticasService {
         this.reciclajeRepository = reciclajeRepository;
         this.canjeRepository = canjeRepository;
     }
-    async rankingInstitucion(institucion_id) {
+    async rankingInstitucion(institucion_id, usuarioRol, usuarioInstitucionId) {
+        if (usuarioRol && usuarioRol !== 'ADMIN' && institucion_id !== usuarioInstitucionId) {
+            throw new common_1.ForbiddenException('No tienes permiso para ver el ranking de esta institución');
+        }
         return this.cursoRepository
             .createQueryBuilder('c')
             .where('c.institucion_id = :institucion_id', { institucion_id })
@@ -37,7 +40,10 @@ let EstadisticasService = class EstadisticasService {
             .select(['c.id', 'c.puntos', 'c.nombre', 'c.paralelo'])
             .getMany();
     }
-    async statsInstitucion(institucion_id) {
+    async statsInstitucion(institucion_id, usuarioRol, usuarioInstitucionId) {
+        if (usuarioRol && usuarioRol !== 'ADMIN' && institucion_id !== usuarioInstitucionId) {
+            throw new common_1.ForbiddenException('No tienes permiso para ver las estadísticas de esta institución');
+        }
         const totalCursos = await this.cursoRepository
             .createQueryBuilder('c')
             .where('c.institucion_id = :institucion_id', { institucion_id })
@@ -62,7 +68,15 @@ let EstadisticasService = class EstadisticasService {
             totalCanjes,
         };
     }
-    async statsCurso(curso_id) {
+    async statsCurso(curso_id, usuarioRol, usuarioInstitucionId) {
+        if (usuarioRol && usuarioRol !== 'ADMIN') {
+            const pertenece = await this.cursoRepository
+                .createQueryBuilder('c')
+                .where('c.id = :curso_id AND c.institucion_id = :institucion_id', { curso_id, institucion_id: usuarioInstitucionId })
+                .getExists();
+            if (!pertenece)
+                throw new common_1.NotFoundException(`Curso ${curso_id} no encontrado`);
+        }
         const reciclajes = await this.reciclajeRepository
             .createQueryBuilder('r')
             .where('r.curso_id = :curso_id', { curso_id })

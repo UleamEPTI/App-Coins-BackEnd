@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Curso } from '../cursos/entities/curso.entity';
@@ -36,7 +36,12 @@ export class EstadisticasService {
   //     .getMany();
   // }
 
-  async rankingInstitucion(institucion_id: string) {
+  async rankingInstitucion(institucion_id: string, usuarioRol?: string, usuarioInstitucionId?: string | null) {
+    // NUEVO: si no es ADMIN y pide una institución que no es la suya, se niega.
+    if (usuarioRol && usuarioRol !== 'ADMIN' && institucion_id !== usuarioInstitucionId) {
+      throw new ForbiddenException('No tienes permiso para ver el ranking de esta institución');
+    }
+
     // COMENTADO (versión anterior, por estudiante):
     // return this.estudianteRepository
     //   .createQueryBuilder('e')
@@ -57,7 +62,12 @@ export class EstadisticasService {
   }
 
   // Estadísticas generales de una institución
-  async statsInstitucion(institucion_id: string) {
+  async statsInstitucion(institucion_id: string, usuarioRol?: string, usuarioInstitucionId?: string | null) {
+    // NUEVO: si no es ADMIN y pide una institución que no es la suya, se niega.
+    if (usuarioRol && usuarioRol !== 'ADMIN' && institucion_id !== usuarioInstitucionId) {
+      throw new ForbiddenException('No tienes permiso para ver las estadísticas de esta institución');
+    }
+
     // COMENTADO: antes contaba Estudiante; ahora cuenta Curso.
     // const totalEstudiantes = await this.estudianteRepository
     //   .createQueryBuilder('e')
@@ -122,7 +132,16 @@ export class EstadisticasService {
   }
 
   // Estadísticas de un curso
-  async statsCurso(curso_id: string) {
+  async statsCurso(curso_id: string, usuarioRol?: string, usuarioInstitucionId?: string | null) {
+    // NUEVO: si no es ADMIN, valida que el curso pertenezca a su institución.
+    if (usuarioRol && usuarioRol !== 'ADMIN') {
+      const pertenece = await this.cursoRepository
+        .createQueryBuilder('c')
+        .where('c.id = :curso_id AND c.institucion_id = :institucion_id', { curso_id, institucion_id: usuarioInstitucionId })
+        .getExists();
+      if (!pertenece) throw new NotFoundException(`Curso ${curso_id} no encontrado`);
+    }
+
     // COMENTADO: antes contaba Estudiante por curso_id.
     // const totalEstudiantes = await this.estudianteRepository
     //   .createQueryBuilder('e')

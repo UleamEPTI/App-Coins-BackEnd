@@ -14,7 +14,7 @@ export class PuntosController {
   @Post()
   modificar(@Body() dto: ModificarPuntosDto, @Request() req: any) {
     const ip = req.ip ?? req.headers['x-forwarded-for'];
-    return this.puntosService.modificarPuntos(dto, req.user.id, req.user.email, ip);
+    return this.puntosService.modificarPuntos(dto, req.user.id, req.user.email, req.user.rol, req.user.institucion_id, ip);
   }
 
   // COMENTADO: antes la ruta y el rol ESTUDIANTE aplicaban a un estudiante
@@ -28,7 +28,7 @@ export class PuntosController {
 
   @Roles('ADMIN', 'INSTITUCION', 'DOCENTE')
   @Get('historial/:curso_id')
-  historial(@Param('curso_id', ParseUUIDPipe) curso_id: string) {
-    return this.puntosService.getHistorial(curso_id);
+  historial(@Param('curso_id', ParseUUIDPipe) curso_id: string, @Request() req: any) {
+    return this.puntosService.getHistorial(curso_id, req.user.rol, req.user.institucion_id);
   }
 }

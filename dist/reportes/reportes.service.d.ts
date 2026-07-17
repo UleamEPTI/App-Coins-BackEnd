@@ -6,7 +6,7 @@ export declare class ReportesService {
     private readonly cursoRepository;
     private readonly reciclajeRepository;
     constructor(cursoRepository: Repository<Curso>, reciclajeRepository: Repository<Reciclaje>);
-    generarReporteInstitucion(institucion_id: string, periodo?: PeriodoReporte): Promise<Buffer>;
-    generarReporteCurso(curso_id: string, periodo?: PeriodoReporte): Promise<Buffer>;
+    generarReporteInstitucion(institucion_id: string, periodo?: PeriodoReporte, usuarioRol?: string, usuarioInstitucionId?: string | null): Promise<Buffer>;
+    generarReporteCurso(curso_id: string, periodo?: PeriodoReporte, usuarioRol?: string, usuarioInstitucionId?: string | null): Promise<Buffer>;
     private generarPDF;
 }

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
@@ -41,7 +41,15 @@ export class ReciclajesService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async registrar(dto: CreateReciclajeDto, registradoPorId: string, ip?: string): Promise<Reciclaje> {
+  async registrar(
+    dto: CreateReciclajeDto,
+    registradoPorId: string,
+    // NUEVO: rol e institucion del usuario autenticado, para validar que
+    // solo pueda registrar kilos en cursos de su propia institución.
+    usuarioRol: string,
+    usuarioInstitucionId: string | null,
+    ip?: string,
+  ): Promise<Reciclaje> {
     // COMENTADO: antes buscaba Estudiante y TipoBotella por separado.
     // const estudiante = await this.estudianteRepository.findOne({ where: { id: dto.estudiante_id } });
     // if (!estudiante) throw new NotFoundException(`Estudiante ${dto.estudiante_id} no encontrado`);
@@ -64,11 +72,23 @@ export class ReciclajesService {
     // para que dos registros simultáneos sobre el mismo curso no se pisen
     // el saldo de puntos (antes se leía el curso fuera del lock y podía
     // perderse un incremento si dos personas registraban al mismo tiempo).
+    //
+    // NUEVO: se usa createQueryBuilder (no manager.findOne) para poder
+    // filtrar por institucion_id directo en SQL sin depender de la
+    // propiedad `institucion_id` de la entidad Curso, que está mal tipada
+    // (está declarada como relación @ManyToOne pero tipada como string) y
+    // no se puede leer de forma confiable desde un objeto ya cargado.
     const saved = await this.dataSource.transaction(async (manager) => {
-      const curso = await manager.findOne(Curso, {
-        where: { id: dto.curso_id },
-        lock: { mode: 'pessimistic_write' },
-      });
+      const cursoQuery = manager
+        .createQueryBuilder(Curso, 'c')
+        .where('c.id = :id', { id: dto.curso_id })
+        .setLock('pessimistic_write');
+
+      if (usuarioRol !== 'ADMIN') {
+        cursoQuery.andWhere('c.institucion_id = :institucion_id', { institucion_id: usuarioInstitucionId });
+      }
+
+      const curso = await cursoQuery.getOne();
       if (!curso) throw new NotFoundException(`Curso ${dto.curso_id} no encontrado`);
 
       // COMENTADO: antes sumaba puntos al estudiante.
@@ -147,7 +167,13 @@ export class ReciclajesService {
   //   });
   // }
 
-  async findByInstitucion(institucion_id: string): Promise<Reciclaje[]> {
+  async findByInstitucion(institucion_id: string, usuarioRol?: string, usuarioInstitucionId?: string | null): Promise<Reciclaje[]> {
+    // NUEVO: si no es ADMIN y pide una institución que no es la suya, se
+    // niega explícitamente.
+    if (usuarioRol && usuarioRol !== 'ADMIN' && institucion_id !== usuarioInstitucionId) {
+      throw new ForbiddenException('No tienes permiso para ver los reciclajes de esta institución');
+    }
+
     return this.reciclajeRepository
       .createQueryBuilder('r')
       // COMENTADO: antes hacía join con estudiante -> curso; ahora curso es directo.
@@ -162,7 +188,17 @@ export class ReciclajesService {
       .getMany();
   }
 
-  async findByCurso(curso_id: string): Promise<Reciclaje[]> {
+  async findByCurso(curso_id: string, usuarioRol?: string, usuarioInstitucionId?: string | null): Promise<Reciclaje[]> {
+    // NUEVO: si no es ADMIN, valida que el curso pertenezca a su
+    // institución antes de devolver el historial.
+    if (usuarioRol && usuarioRol !== 'ADMIN') {
+      const pertenece = await this.dataSource
+        .createQueryBuilder(Curso, 'c')
+        .where('c.id = :curso_id AND c.institucion_id = :institucion_id', { curso_id, institucion_id: usuarioInstitucionId })
+        .getExists();
+      if (!pertenece) throw new NotFoundException(`Curso ${curso_id} no encontrado`);
+    }
+
     // COMENTADO: antes hacía join con estudiante -> curso_id.
     // return this.reciclajeRepository
     //   .createQueryBuilder('r')

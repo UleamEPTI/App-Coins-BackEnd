@@ -11,9 +11,9 @@ export declare class ReciclajesService {
     private readonly auditoriaService;
     private readonly dataSource;
     constructor(reciclajeRepository: Repository<Reciclaje>, usuarioRepository: Repository<Usuario>, historialRepository: Repository<HistorialPuntos>, auditoriaService: AuditoriaService, dataSource: DataSource);
-    registrar(dto: CreateReciclajeDto, registradoPorId: string, ip?: string): Promise<Reciclaje>;
+    registrar(dto: CreateReciclajeDto, registradoPorId: string, usuarioRol: string, usuarioInstitucionId: string | null, ip?: string): Promise<Reciclaje>;
     findAll(): Promise<Reciclaje[]>;
-    findByInstitucion(institucion_id: string): Promise<Reciclaje[]>;
-    findByCurso(curso_id: string): Promise<Reciclaje[]>;
+    findByInstitucion(institucion_id: string, usuarioRol?: string, usuarioInstitucionId?: string | null): Promise<Reciclaje[]>;
+    findByCurso(curso_id: string, usuarioRol?: string, usuarioInstitucionId?: string | null): Promise<Reciclaje[]>;
     findByRegistradoPor(registrado_por_id: string): Promise<Reciclaje[]>;
 }

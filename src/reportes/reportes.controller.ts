@@ -1,4 +1,4 @@
-import { Controller, Get, Param, ParseUUIDPipe, UseGuards, Res, Query } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe, UseGuards, Res, Query, Request } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -18,8 +18,9 @@ export class ReportesController {
     // la institución para poder filtrar sus reportes por rango de tiempo.
     @Query('periodo') periodo: PeriodoReporte | undefined,
     @Res() res: Response,
+    @Request() req: any,
   ) {
-    const buffer = await this.reportesService.generarReporteInstitucion(institucion_id, periodo);
+    const buffer = await this.reportesService.generarReporteInstitucion(institucion_id, periodo, req.user.rol, req.user.institucion_id);
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="reporte-institucion-${institucion_id}.pdf"`,
@@ -34,8 +35,9 @@ export class ReportesController {
     @Param('curso_id', ParseUUIDPipe) curso_id: string,
     @Query('periodo') periodo: PeriodoReporte | undefined,
     @Res() res: Response,
+    @Request() req: any,
   ) {
-    const buffer = await this.reportesService.generarReporteCurso(curso_id, periodo);
+    const buffer = await this.reportesService.generarReporteCurso(curso_id, periodo, req.user.rol, req.user.institucion_id);
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="reporte-curso-${curso_id}.pdf"`,

@@ -30,7 +30,16 @@ export class CanjesService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async canjear(dto: CreateCanjeDto, usuarioId?: string, usuarioEmail?: string, ip?: string): Promise<Canje> {
+  async canjear(
+    dto: CreateCanjeDto,
+    usuarioId?: string,
+    usuarioEmail?: string,
+    // NUEVO: rol e institucion del usuario autenticado, para validar que
+    // solo pueda canjear premios para cursos de su propia institución.
+    usuarioRol?: string,
+    usuarioInstitucionId?: string | null,
+    ip?: string,
+  ): Promise<Canje> {
     const saved = await this.dataSource.transaction(async (manager) => {
       // Bloqueo de fila: si otra petición está canjeando el mismo curso/premio,
       // esta espera hasta que la primera termine, evitando el race condition.
@@ -41,10 +50,21 @@ export class CanjesService {
       // });
       // if (!estudiante) throw new NotFoundException(`Estudiante ${dto.estudiante_id} no encontrado`);
 
-      const curso = await manager.findOne(Curso, {
-        where: { id: dto.curso_id },
-        lock: { mode: 'pessimistic_write' },
-      });
+      // NUEVO: se usa createQueryBuilder (no manager.findOne) para poder
+      // filtrar por institucion_id directo en SQL sin depender de la
+      // propiedad `institucion_id` de la entidad Curso, que está mal
+      // tipada (declarada como relación @ManyToOne pero tipada como
+      // string) y no se puede leer de forma confiable ya cargada.
+      const cursoQuery = manager
+        .createQueryBuilder(Curso, 'c')
+        .where('c.id = :id', { id: dto.curso_id })
+        .setLock('pessimistic_write');
+
+      if (usuarioRol !== 'ADMIN') {
+        cursoQuery.andWhere('c.institucion_id = :institucion_id', { institucion_id: usuarioInstitucionId });
+      }
+
+      const curso = await cursoQuery.getOne();
       if (!curso) throw new NotFoundException(`Curso ${dto.curso_id} no encontrado`);
 
       const premio = await manager.findOne(Premio, {
@@ -137,7 +157,16 @@ export class CanjesService {
   //   });
   // }
 
-  async findByCurso(curso_id: string): Promise<Canje[]> {
+  async findByCurso(curso_id: string, usuarioRol?: string, usuarioInstitucionId?: string | null): Promise<Canje[]> {
+    // NUEVO: si no es ADMIN, valida que el curso pertenezca a su institución.
+    if (usuarioRol && usuarioRol !== 'ADMIN') {
+      const pertenece = await this.dataSource
+        .createQueryBuilder(Curso, 'c')
+        .where('c.id = :curso_id AND c.institucion_id = :institucion_id', { curso_id, institucion_id: usuarioInstitucionId })
+        .getExists();
+      if (!pertenece) throw new NotFoundException(`Curso ${curso_id} no encontrado`);
+    }
+
     return this.canjeRepository.find({
       where: { curso: { id: curso_id } },
       relations: ['premio'],

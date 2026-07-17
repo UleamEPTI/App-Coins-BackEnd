@@ -18,6 +18,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       id: payload.sub,
       email: payload.email,
       rol: payload.rol,
+      // NUEVO: institucion_id viaja en el token y queda disponible en
+      // req.user para que los services validen pertenencia a institución.
+      institucion_id: payload.institucion_id ?? null,
     };
   }
 }

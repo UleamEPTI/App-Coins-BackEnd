@@ -26,16 +26,16 @@ let ReciclajesController = class ReciclajesController {
     }
     registrar(dto, req) {
         const ip = req.ip ?? req.headers['x-forwarded-for'];
-        return this.reciclajesService.registrar(dto, req.user.id, ip);
+        return this.reciclajesService.registrar(dto, req.user.id, req.user.rol, req.user.institucion_id, ip);
     }
     findAll() {
         return this.reciclajesService.findAll();
     }
-    findByInstitucion(institucion_id) {
-        return this.reciclajesService.findByInstitucion(institucion_id);
+    findByInstitucion(institucion_id, req) {
+        return this.reciclajesService.findByInstitucion(institucion_id, req.user.rol, req.user.institucion_id);
     }
-    findByCurso(curso_id) {
-        return this.reciclajesService.findByCurso(curso_id);
+    findByCurso(curso_id, req) {
+        return this.reciclajesService.findByCurso(curso_id, req.user.rol, req.user.institucion_id);
     }
     findByRegistradoPor(registrado_por_id) {
         return this.reciclajesService.findByRegistradoPor(registrado_por_id);
@@ -62,16 +62,18 @@ __decorate([
     (0, roles_decorator_1.Roles)('ADMIN', 'INSTITUCION'),
     (0, common_1.Get)('institucion/:institucion_id'),
     __param(0, (0, common_1.Param)('institucion_id', common_1.ParseUUIDPipe)),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], ReciclajesController.prototype, "findByInstitucion", null);
 __decorate([
     (0, roles_decorator_1.Roles)('ADMIN', 'INSTITUCION', 'DOCENTE'),
     (0, common_1.Get)('curso/:curso_id'),
     __param(0, (0, common_1.Param)('curso_id', common_1.ParseUUIDPipe)),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], ReciclajesController.prototype, "findByCurso", null);
 __decorate([

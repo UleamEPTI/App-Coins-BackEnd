@@ -7,14 +7,14 @@ export declare class EstadisticasService {
     private readonly reciclajeRepository;
     private readonly canjeRepository;
     constructor(cursoRepository: Repository<Curso>, reciclajeRepository: Repository<Reciclaje>, canjeRepository: Repository<Canje>);
-    rankingInstitucion(institucion_id: string): Promise<Curso[]>;
-    statsInstitucion(institucion_id: string): Promise<{
+    rankingInstitucion(institucion_id: string, usuarioRol?: string, usuarioInstitucionId?: string | null): Promise<Curso[]>;
+    statsInstitucion(institucion_id: string, usuarioRol?: string, usuarioInstitucionId?: string | null): Promise<{
         totalCursos: number;
         totalKilos: number;
         totalPuntosGenerados: number;
         totalCanjes: number;
     }>;
-    statsCurso(curso_id: string): Promise<{
+    statsCurso(curso_id: string, usuarioRol?: string, usuarioInstitucionId?: string | null): Promise<{
         totalKilos: number;
         totalPuntosGenerados: number;
     }>;

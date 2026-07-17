@@ -42,10 +42,14 @@ export class AuthService {
 
     const profile = await this.buildProfilePayload(usuario);
 
+    // NUEVO: se agrega institucion_id al payload firmado (antes solo traía
+    // id, email y rol) para poder validar en cada endpoint que un DOCENTE
+    // o INSTITUCION solo opere sobre cursos de su propia institución.
     const payload = {
       sub: usuario.id,
       email: usuario.email,
       rol: usuario.rol.nombre,
+      institucion_id: usuario.institucion_id ?? null,
     };
 
     return {
@@ -71,10 +75,12 @@ export class AuthService {
 
     const profile = await this.buildProfilePayload(usuario);
 
+    // NUEVO: mismo campo institucion_id que en login().
     const payload = {
       sub: usuario.id,
       email: usuario.email,
       rol: usuario.rol.nombre,
+      institucion_id: usuario.institucion_id ?? null,
     };
 
     return {

@@ -24,7 +24,16 @@ export class PuntosService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async modificarPuntos(dto: ModificarPuntosDto, usuarioId?: string, usuarioEmail?: string, ip?: string) {
+  async modificarPuntos(
+    dto: ModificarPuntosDto,
+    usuarioId?: string,
+    usuarioEmail?: string,
+    // NUEVO: rol e institucion del usuario autenticado, para validar que
+    // solo pueda ajustar puntos de cursos de su propia institución.
+    usuarioRol?: string,
+    usuarioInstitucionId?: string | null,
+    ip?: string,
+  ) {
     // COMENTADO: antes buscaba Estudiante.
     // const estudiante = await this.estudianteRepository.findOne({ where: { id: dto.estudiante_id } });
     // if (!estudiante) throw new NotFoundException(`Estudiante ${dto.estudiante_id} no encontrado`);
@@ -35,11 +44,22 @@ export class PuntosService {
     // (antes se leía el curso, se modificaba en memoria y se guardaba sin
     // ningún bloqueo, lo que podía perder un incremento/decremento si dos
     // peticiones llegaban casi al mismo tiempo).
+    //
+    // NUEVO: se usa createQueryBuilder (no manager.findOne) para poder
+    // filtrar por institucion_id directo en SQL sin depender de la
+    // propiedad `institucion_id` de la entidad Curso, que está mal tipada
+    // (declarada como relación @ManyToOne pero tipada como string).
     const { curso, puntosAnteriores, transaccion } = await this.dataSource.transaction(async (manager) => {
-      const curso = await manager.findOne(Curso, {
-        where: { id: dto.curso_id },
-        lock: { mode: 'pessimistic_write' },
-      });
+      const cursoQuery = manager
+        .createQueryBuilder(Curso, 'c')
+        .where('c.id = :id', { id: dto.curso_id })
+        .setLock('pessimistic_write');
+
+      if (usuarioRol !== 'ADMIN') {
+        cursoQuery.andWhere('c.institucion_id = :institucion_id', { institucion_id: usuarioInstitucionId });
+      }
+
+      const curso = await cursoQuery.getOne();
       if (!curso) throw new NotFoundException(`Curso ${dto.curso_id} no encontrado`);
 
       // COMENTADO: antes usaba estudiante.puntos.
@@ -102,12 +122,21 @@ export class PuntosService {
     return { curso, transaccion };
   }
 
-  async getHistorial(curso_id: string): Promise<HistorialPuntos[]> {
+  async getHistorial(curso_id: string, usuarioRol?: string, usuarioInstitucionId?: string | null): Promise<HistorialPuntos[]> {
     // COMENTADO: antes buscaba y filtraba por Estudiante.
     // const estudiante = await this.estudianteRepository.findOne({ where: { id: estudiante_id } });
     // if (!estudiante) throw new NotFoundException(`Estudiante ${estudiante_id} no encontrado`);
     const curso = await this.cursoRepository.findOne({ where: { id: curso_id } });
     if (!curso) throw new NotFoundException(`Curso ${curso_id} no encontrado`);
+
+    // NUEVO: si no es ADMIN, valida que el curso pertenezca a su institución.
+    if (usuarioRol && usuarioRol !== 'ADMIN') {
+      const pertenece = await this.cursoRepository
+        .createQueryBuilder('c')
+        .where('c.id = :curso_id AND c.institucion_id = :institucion_id', { curso_id, institucion_id: usuarioInstitucionId })
+        .getExists();
+      if (!pertenece) throw new NotFoundException(`Curso ${curso_id} no encontrado`);
+    }
 
     return this.historialRepository.find({
       // COMENTADO: where: { estudiante: { id: estudiante_id } },

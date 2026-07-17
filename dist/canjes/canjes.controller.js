@@ -27,13 +27,13 @@ let CanjesController = class CanjesController {
     }
     canjear(dto, req) {
         const ip = req.ip ?? req.headers['x-forwarded-for'];
-        return this.canjesService.canjear(dto, req.user.id, req.user.email, ip);
+        return this.canjesService.canjear(dto, req.user.id, req.user.email, req.user.rol, req.user.institucion_id, ip);
     }
     findAll() {
         return this.canjesService.findAll();
     }
-    findByCurso(curso_id) {
-        return this.canjesService.findByCurso(curso_id);
+    findByCurso(curso_id, req) {
+        return this.canjesService.findByCurso(curso_id, req.user.rol, req.user.institucion_id);
     }
     actualizarEstado(id, estado, req) {
         const ip = req.ip ?? req.headers['x-forwarded-for'];
@@ -61,8 +61,9 @@ __decorate([
     (0, roles_decorator_1.Roles)('ADMIN', 'INSTITUCION', 'DOCENTE'),
     (0, common_1.Get)('curso/:curso_id'),
     __param(0, (0, common_1.Param)('curso_id', common_1.ParseUUIDPipe)),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], CanjesController.prototype, "findByCurso", null);
 __decorate([

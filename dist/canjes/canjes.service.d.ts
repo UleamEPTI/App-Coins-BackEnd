@@ -13,8 +13,8 @@ export declare class CanjesService {
     private readonly auditoriaService;
     private readonly dataSource;
     constructor(canjeRepository: Repository<Canje>, cursoRepository: Repository<Curso>, premioRepository: Repository<Premio>, historialRepository: Repository<HistorialPuntos>, auditoriaService: AuditoriaService, dataSource: DataSource);
-    canjear(dto: CreateCanjeDto, usuarioId?: string, usuarioEmail?: string, ip?: string): Promise<Canje>;
+    canjear(dto: CreateCanjeDto, usuarioId?: string, usuarioEmail?: string, usuarioRol?: string, usuarioInstitucionId?: string | null, ip?: string): Promise<Canje>;
     findAll(): Promise<Canje[]>;
-    findByCurso(curso_id: string): Promise<Canje[]>;
+    findByCurso(curso_id: string, usuarioRol?: string, usuarioInstitucionId?: string | null): Promise<Canje[]>;
     actualizarEstado(id: string, estado: EstadoCanje, usuarioId?: string, usuarioEmail?: string, ip?: string): Promise<Canje>;
 }

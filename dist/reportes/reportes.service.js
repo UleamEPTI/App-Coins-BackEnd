@@ -44,7 +44,10 @@ let ReportesService = class ReportesService {
         this.cursoRepository = cursoRepository;
         this.reciclajeRepository = reciclajeRepository;
     }
-    async generarReporteInstitucion(institucion_id, periodo) {
+    async generarReporteInstitucion(institucion_id, periodo, usuarioRol, usuarioInstitucionId) {
+        if (usuarioRol && usuarioRol !== 'ADMIN' && institucion_id !== usuarioInstitucionId) {
+            throw new common_1.ForbiddenException('No tienes permiso para generar el reporte de esta institución');
+        }
         const cursos = await this.cursoRepository
             .createQueryBuilder('c')
             .where('c.institucion_id = :institucion_id', { institucion_id })
@@ -74,7 +77,15 @@ let ReportesService = class ReportesService {
             })),
         });
     }
-    async generarReporteCurso(curso_id, periodo) {
+    async generarReporteCurso(curso_id, periodo, usuarioRol, usuarioInstitucionId) {
+        if (usuarioRol && usuarioRol !== 'ADMIN') {
+            const pertenece = await this.cursoRepository
+                .createQueryBuilder('c')
+                .where('c.id = :curso_id AND c.institucion_id = :institucion_id', { curso_id, institucion_id: usuarioInstitucionId })
+                .getExists();
+            if (!pertenece)
+                throw new common_1.NotFoundException(`Curso ${curso_id} no encontrado`);
+        }
         const curso = await this.cursoRepository.findOne({ where: { id: curso_id } });
         const desde = fechaInicioPeriodo(periodo);
         const reciclajesQuery = this.reciclajeRepository

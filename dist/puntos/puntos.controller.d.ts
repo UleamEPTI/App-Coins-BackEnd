@@ -7,5 +7,5 @@ export declare class PuntosController {
         curso: import("../cursos/entities/curso.entity").Curso;
         transaccion: import("./entities/historial-puntos.entity").HistorialPuntos;
     }>;
-    historial(curso_id: string): Promise<import("./entities/historial-puntos.entity").HistorialPuntos[]>;
+    historial(curso_id: string, req: any): Promise<import("./entities/historial-puntos.entity").HistorialPuntos[]>;
 }

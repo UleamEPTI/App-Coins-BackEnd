@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, ParseUUIDPipe, UseGuards, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, ParseUUIDPipe, UseGuards, Query, Request } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -16,8 +16,8 @@ export class CursosController {
   @Roles('ADMIN', 'INSTITUCION')
   @Post()
   @ApiOperation({ summary: 'Crear curso' })
-  create(@Body() dto: CreateCursoDto) {
-    return this.cursosService.create(dto);
+  create(@Body() dto: CreateCursoDto, @Request() req: any) {
+    return this.cursosService.create(dto, req.user.rol, req.user.institucion_id);
   }
 
   @Roles('ADMIN', 'INSTITUCION', 'DOCENTE')
@@ -31,6 +31,7 @@ export class CursosController {
   @ApiQuery({ name: 'sort', required: false, enum: ['nombre', 'created_at', 'paralelo'] })
   @ApiQuery({ name: 'order', required: false, enum: ['ASC', 'DESC'] })
   findAll(
+    @Request() req: any,
     @Query('search') search?: string,
     @Query('institucion_id') institucion_id?: string,
     @Query('activo') activo?: string,
@@ -39,42 +40,46 @@ export class CursosController {
     @Query('sort') sort?: 'nombre' | 'created_at' | 'paralelo',
     @Query('order') order?: 'ASC' | 'DESC',
   ) {
-    return this.cursosService.findAll({
-      search,
-      institucion_id,
-      activo: activo !== undefined ? activo === 'true' : undefined,
-      page: page ? parseInt(page) : 1,
-      limit: limit ? parseInt(limit) : 20,
-      sort,
-      order,
-    });
+    return this.cursosService.findAll(
+      {
+        search,
+        institucion_id,
+        activo: activo !== undefined ? activo === 'true' : undefined,
+        page: page ? parseInt(page) : 1,
+        limit: limit ? parseInt(limit) : 20,
+        sort,
+        order,
+      },
+      req.user.rol,
+      req.user.institucion_id,
+    );
   }
 
   @Roles('ADMIN', 'INSTITUCION', 'DOCENTE')
   @Get('institucion/:institucion_id')
   @ApiOperation({ summary: 'Listar cursos de una institución' })
-  findByInstitucion(@Param('institucion_id', ParseUUIDPipe) institucion_id: string) {
-    return this.cursosService.findByInstitucion(institucion_id);
+  findByInstitucion(@Param('institucion_id', ParseUUIDPipe) institucion_id: string, @Request() req: any) {
+    return this.cursosService.findByInstitucion(institucion_id, req.user.rol, req.user.institucion_id);
   }
 
   @Roles('ADMIN', 'INSTITUCION', 'DOCENTE')
   @Get(':id')
   @ApiOperation({ summary: 'Ver un curso' })
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.cursosService.findOne(id);
+  findOne(@Param('id', ParseUUIDPipe) id: string, @Request() req: any) {
+    return this.cursosService.findOne(id, req.user.rol, req.user.institucion_id);
   }
 
   @Roles('ADMIN', 'INSTITUCION')
   @Put(':id')
   @ApiOperation({ summary: 'Actualizar curso' })
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: Partial<CreateCursoDto>) {
-    return this.cursosService.update(id, dto);
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: Partial<CreateCursoDto>, @Request() req: any) {
+    return this.cursosService.update(id, dto, req.user.rol, req.user.institucion_id);
   }
 
   @Roles('ADMIN', 'INSTITUCION')
   @Delete(':id')
   @ApiOperation({ summary: 'Desactivar curso' })
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.cursosService.remove(id);
+  remove(@Param('id', ParseUUIDPipe) id: string, @Request() req: any) {
+    return this.cursosService.remove(id, req.user.rol, req.user.institucion_id);
   }
 }

@@ -18,7 +18,7 @@ export class CanjesController {
   @Post()
   canjear(@Body() dto: CreateCanjeDto, @Request() req: any) {
     const ip = req.ip ?? req.headers['x-forwarded-for'];
-    return this.canjesService.canjear(dto, req.user.id, req.user.email, ip);
+    return this.canjesService.canjear(dto, req.user.id, req.user.email, req.user.rol, req.user.institucion_id, ip);
   }
 
   @Roles('ADMIN', 'INSTITUCION')
@@ -36,8 +36,8 @@ export class CanjesController {
 
   @Roles('ADMIN', 'INSTITUCION', 'DOCENTE')
   @Get('curso/:curso_id')
-  findByCurso(@Param('curso_id', ParseUUIDPipe) curso_id: string) {
-    return this.canjesService.findByCurso(curso_id);
+  findByCurso(@Param('curso_id', ParseUUIDPipe) curso_id: string, @Request() req: any) {
+    return this.canjesService.findByCurso(curso_id, req.user.rol, req.user.institucion_id);
   }
 
   @Roles('ADMIN', 'INSTITUCION')

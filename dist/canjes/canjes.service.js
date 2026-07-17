@@ -37,12 +37,16 @@ let CanjesService = class CanjesService {
         this.auditoriaService = auditoriaService;
         this.dataSource = dataSource;
     }
-    async canjear(dto, usuarioId, usuarioEmail, ip) {
+    async canjear(dto, usuarioId, usuarioEmail, usuarioRol, usuarioInstitucionId, ip) {
         const saved = await this.dataSource.transaction(async (manager) => {
-            const curso = await manager.findOne(curso_entity_1.Curso, {
-                where: { id: dto.curso_id },
-                lock: { mode: 'pessimistic_write' },
-            });
+            const cursoQuery = manager
+                .createQueryBuilder(curso_entity_1.Curso, 'c')
+                .where('c.id = :id', { id: dto.curso_id })
+                .setLock('pessimistic_write');
+            if (usuarioRol !== 'ADMIN') {
+                cursoQuery.andWhere('c.institucion_id = :institucion_id', { institucion_id: usuarioInstitucionId });
+            }
+            const curso = await cursoQuery.getOne();
             if (!curso)
                 throw new common_1.NotFoundException(`Curso ${dto.curso_id} no encontrado`);
             const premio = await manager.findOne(premio_entity_1.Premio, {
@@ -103,7 +107,15 @@ let CanjesService = class CanjesService {
             order: { created_at: 'DESC' },
         });
     }
-    async findByCurso(curso_id) {
+    async findByCurso(curso_id, usuarioRol, usuarioInstitucionId) {
+        if (usuarioRol && usuarioRol !== 'ADMIN') {
+            const pertenece = await this.dataSource
+                .createQueryBuilder(curso_entity_1.Curso, 'c')
+                .where('c.id = :curso_id AND c.institucion_id = :institucion_id', { curso_id, institucion_id: usuarioInstitucionId })
+                .getExists();
+            if (!pertenece)
+                throw new common_1.NotFoundException(`Curso ${curso_id} no encontrado`);
+        }
         return this.canjeRepository.find({
             where: { curso: { id: curso_id } },
             relations: ['premio'],

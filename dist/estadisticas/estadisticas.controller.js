@@ -23,14 +23,14 @@ let EstadisticasController = class EstadisticasController {
     constructor(estadisticasService) {
         this.estadisticasService = estadisticasService;
     }
-    statsInstitucion(institucion_id) {
-        return this.estadisticasService.statsInstitucion(institucion_id);
+    statsInstitucion(institucion_id, req) {
+        return this.estadisticasService.statsInstitucion(institucion_id, req.user.rol, req.user.institucion_id);
     }
-    statsCurso(curso_id) {
-        return this.estadisticasService.statsCurso(curso_id);
+    statsCurso(curso_id, req) {
+        return this.estadisticasService.statsCurso(curso_id, req.user.rol, req.user.institucion_id);
     }
-    rankingInstitucion(institucion_id) {
-        return this.estadisticasService.rankingInstitucion(institucion_id);
+    rankingInstitucion(institucion_id, req) {
+        return this.estadisticasService.rankingInstitucion(institucion_id, req.user.rol, req.user.institucion_id);
     }
 };
 exports.EstadisticasController = EstadisticasController;
@@ -38,24 +38,27 @@ __decorate([
     (0, roles_decorator_1.Roles)('ADMIN', 'INSTITUCION'),
     (0, common_1.Get)('institucion/:institucion_id'),
     __param(0, (0, common_1.Param)('institucion_id', common_1.ParseUUIDPipe)),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], EstadisticasController.prototype, "statsInstitucion", null);
 __decorate([
     (0, roles_decorator_1.Roles)('ADMIN', 'INSTITUCION', 'DOCENTE'),
     (0, common_1.Get)('curso/:curso_id'),
     __param(0, (0, common_1.Param)('curso_id', common_1.ParseUUIDPipe)),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], EstadisticasController.prototype, "statsCurso", null);
 __decorate([
     (0, roles_decorator_1.Roles)('ADMIN', 'INSTITUCION', 'DOCENTE'),
     (0, common_1.Get)('ranking/institucion/:institucion_id'),
     __param(0, (0, common_1.Param)('institucion_id', common_1.ParseUUIDPipe)),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], EstadisticasController.prototype, "rankingInstitucion", null);
 exports.EstadisticasController = EstadisticasController = __decorate([

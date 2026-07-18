@@ -26,7 +26,16 @@ export class CursosService {
     // en el body y se fuerza la del propio usuario, para que una
     // INSTITUCION no pueda crear un curso a nombre de otra institución.
     const institucion_id = usuarioRol === 'ADMIN' ? dto.institucion_id : usuarioInstitucionId;
-    const curso = this.cursoRepository.create({ ...dto, institucion_id });
+    // FIX: institucion_id ahora es un campo calculado (@RelationId), así
+    // que para persistir el valor hay que setear la relación
+    // `institucion` con el id, no una columna directa.
+    const curso = this.cursoRepository.create({
+      nombre: dto.nombre,
+      paralelo: dto.paralelo,
+      descripcion: dto.descripcion,
+      activo: dto.activo,
+      institucion: { id: institucion_id } as any,
+    });
     return this.cursoRepository.save(curso);
   }
 
@@ -47,11 +56,11 @@ export class CursosService {
 
     const query = this.cursoRepository
       .createQueryBuilder('c')
-      // FIX: la relación en la entidad Curso se llama 'institucion_id',
-      // no 'institucion' (bug pre-existente: esto tiraba error en
-      // tiempo de ejecución porque TypeORM no encontraba esa relación,
-      // aunque compilaba bien porque los paths de relación son strings).
-      .leftJoinAndSelect('c.institucion_id', 'i');
+      // FIX: antes decía 'c.institucion_id' (que era el nombre de la
+      // relación mal nombrada, ya corregido en la entidad). Ahora la
+      // relación se llama 'institucion', separada de la columna plana
+      // 'institucion_id'.
+      .leftJoinAndSelect('c.institucion', 'i');
 
     if (search) {
       query.andWhere(
@@ -93,18 +102,24 @@ export class CursosService {
       throw new ForbiddenException('No tienes permiso para ver los cursos de esta institución');
     }
 
-    return this.cursoRepository.find({
-      where: { institucion_id, activo: true },
-      // FIX: relación se llama 'institucion_id', no 'institucion'.
-      relations: ['institucion_id'],
-    });
+    // FIX: institucion_id ahora es un campo @RelationId (calculado), y
+    // ese tipo de campo NO se puede usar dentro de `find({ where })` —
+    // TypeORM tira "Property institucion_id was not found" porque no es
+    // una columna real. Se usa createQueryBuilder, que sí lo soporta
+    // porque filtra directo sobre la columna SQL.
+    return this.cursoRepository
+      .createQueryBuilder('c')
+      .leftJoinAndSelect('c.institucion', 'i')
+      .where('c.institucion_id = :institucion_id', { institucion_id })
+      .andWhere('c.activo = true')
+      .getMany();
   }
 
   async findOne(id: string, usuarioRol?: string, usuarioInstitucionId?: string | null): Promise<Curso> {
     const curso = await this.cursoRepository.findOne({
       where: { id },
-      // FIX: relación se llama 'institucion_id', no 'institucion'.
-      relations: ['institucion_id'],
+      // FIX: la relación se llama 'institucion', no 'institucion_id'.
+      relations: ['institucion'],
     });
     if (!curso) throw new NotFoundException(`Curso ${id} no encontrado`);
 
@@ -127,8 +142,14 @@ export class CursosService {
     const curso = await this.findOne(id, usuarioRol, usuarioInstitucionId);
     // NUEVO: si no es ADMIN, no se permite reasignar el curso a otra
     // institución vía este endpoint.
-    const dtoSeguro = usuarioRol === 'ADMIN' ? dto : { ...dto, institucion_id: undefined };
-    Object.assign(curso, dtoSeguro);
+    // FIX: institucion_id ahora es de solo lectura (@RelationId) en la
+    // entidad; para reasignar la institución hay que setear la relación
+    // `institucion`.
+    const { institucion_id, ...resto } = dto;
+    Object.assign(curso, resto);
+    if (usuarioRol === 'ADMIN' && institucion_id) {
+      curso.institucion = { id: institucion_id } as any;
+    }
     return this.cursoRepository.save(curso);
   }
 

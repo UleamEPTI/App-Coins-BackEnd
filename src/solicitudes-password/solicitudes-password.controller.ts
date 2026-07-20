@@ -6,6 +6,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { SolicitudesPasswordService } from './solicitudes-password.service';
 import { CreateSolicitudDto } from './dto/create-solicitud.dto';
 import { AtenderSolicitudDto } from './dto/atender-solicitud.dto';
+import { CambiarPasswordDirectoDto } from './dto/cambiar-password-directo.dto';
 
 @ApiTags('SolicitudesPassword')
 @ApiBearerAuth('access-token')
@@ -19,10 +20,17 @@ export class SolicitudesPasswordController {
   @ApiOperation({ summary: 'INSTITUCION/ADMIN cambia contraseña directamente' })
   cambiarDirecto(
     @Param('usuario_id', ParseUUIDPipe) usuario_id: string,
-    @Body('nueva_password') nueva_password: string,
+    // FIX: antes era @Body('nueva_password') sin ningún DTO, así que no
+    // pasaba por ValidationPipe y podía llegar vacía o cualquier cosa.
+    @Body() dto: CambiarPasswordDirectoDto,
     @Request() req: any,
   ) {
-    return this.service.cambiarPasswordDirecto(usuario_id, nueva_password, req.user.id);
+    // NUEVO: se pasa el rol e institución de quien hace el cambio, para
+    // que el service valide que INSTITUCION solo pueda tocar usuarios de
+    // su propia institución (antes cualquier INSTITUCION podía cambiar
+    // la contraseña de cualquier usuario del sistema con solo saber su
+    // UUID, sin importar a qué institución perteneciera).
+    return this.service.cambiarPasswordDirecto(usuario_id, dto.nueva_password, req.user.id, req.user.rol, req.user.institucion_id);
   }
 
   @Roles('INSTITUCION')

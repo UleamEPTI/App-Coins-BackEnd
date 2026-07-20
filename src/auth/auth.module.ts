@@ -19,10 +19,21 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     // COMENTADO: TypeOrmModule.forFeature([Estudiante, Reciclaje]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-      secret: configService.get<string>('JWT_SECRET') ?? 'secret',
-      signOptions: { expiresIn: '24h' },
-    }),
+      useFactory: (configService: ConfigService) => {
+        // FIX: mismo problema que en jwt.strategy.ts — se quita el
+        // fallback `?? 'secret'` para no firmar tokens con un secreto
+        // adivinable si falta la variable de entorno.
+        const secret = configService.get<string>('JWT_SECRET');
+        if (!secret) {
+          throw new Error(
+            'JWT_SECRET no está configurado. Define esta variable de entorno antes de arrancar el servidor (revisa el archivo .env).',
+          );
+        }
+        return {
+          secret,
+          signOptions: { expiresIn: '24h' },
+        };
+      },
       inject: [ConfigService],
     }),
   ],

@@ -1,18 +1,14 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { EstudiantesService } from './estudiantes.service';
-// COMENTADO: el controller quedó completamente comentado (Bachillero pidió
-// quitar la gestión de estudiante individual). Ya no se registra aquí.
-// import { EstudiantesController } from './estudiantes.controller';
 import { Estudiante } from './entities/estudiante.entity';
-import { Curso } from '../cursos/entities/curso.entity';
-import { Usuario } from '../usuarios/entities/usuario.entity';
+import { EstudiantesService } from './estudiantes.service';
+import { EstudiantesController } from './estudiantes.controller';
+import { CursosModule } from '../cursos/cursos.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Estudiante, Curso, Usuario])],
+  imports: [TypeOrmModule.forFeature([Estudiante]), CursosModule],
   providers: [EstudiantesService],
-  // COMENTADO: controllers: [EstudiantesController],
-  controllers: [],
+  controllers: [EstudiantesController],
   exports: [EstudiantesService],
 })
 export class EstudiantesModule {}

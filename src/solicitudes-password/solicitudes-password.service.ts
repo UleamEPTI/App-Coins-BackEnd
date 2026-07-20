@@ -23,12 +23,27 @@ export class SolicitudesPasswordService {
   ) {}
 
   // INSTITUCION cambia contraseña directamente
-  async cambiarPasswordDirecto(usuarioObjetivoId: string, nuevaPassword: string, solicitanteId: string) {
+  async cambiarPasswordDirecto(
+    usuarioObjetivoId: string,
+    nuevaPassword: string,
+    solicitanteId: string,
+    // NUEVO: rol e institución de quien hace el cambio.
+    solicitanteRol?: string,
+    solicitanteInstitucionId?: string | null,
+  ) {
     const usuario = await this.usuarioRepository.findOne({
       where: { id: usuarioObjetivoId },
       relations: ['rol'],
     });
     if (!usuario) throw new NotFoundException('Usuario no encontrado');
+
+    // NUEVO: si quien hace el cambio no es ADMIN, solo puede tocar
+    // usuarios de su propia institución (antes cualquier INSTITUCION
+    // podía cambiar la contraseña de cualquier usuario del sistema con
+    // solo saber su UUID, sin validar institución).
+    if (solicitanteRol && solicitanteRol !== 'ADMIN' && usuario.institucion_id !== solicitanteInstitucionId) {
+      throw new ForbiddenException('No tienes permiso para cambiar la contraseña de este usuario');
+    }
 
     const hash = await bcrypt.hash(nuevaPassword, 10);
     usuario.password_hash = hash;
@@ -119,4 +134,4 @@ export class SolicitudesPasswordService {
 
     return limpia;
   }
-} 
+}

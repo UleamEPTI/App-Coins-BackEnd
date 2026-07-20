@@ -175,16 +175,60 @@ export class CanjesService {
   }
 
   async actualizarEstado(id: string, estado: EstadoCanje, usuarioId?: string, usuarioEmail?: string, ip?: string): Promise<Canje> {
-    const canje = await this.canjeRepository.findOne({
-      where: { id },
-      // COMENTADO: relations: ['estudiante', 'premio'],
-      relations: ['curso', 'premio'],
-    });
-    if (!canje) throw new NotFoundException(`Canje ${id} no encontrado`);
+    // FIX: antes esto solo cambiaba el campo `estado`. Si se marcaba un
+    // canje como CANCELADO, el curso ya había perdido los puntos y el
+    // premio ya había perdido stock (eso pasa en canjear()), y nunca se
+    // devolvían — el curso quedaba perjudicado sin razón. Ahora, cuando
+    // el nuevo estado es CANCELADO, se revierte todo dentro de una
+    // transacción con lock pesimista (mismo patrón que canjear()), y se
+    // deja registro en el historial de puntos del reverso.
+    const { saved, estadoAnterior } = await this.dataSource.transaction(async (manager) => {
+      const canje = await manager.findOne(Canje, {
+        where: { id },
+        relations: ['curso', 'premio'],
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!canje) throw new NotFoundException(`Canje ${id} no encontrado`);
 
-    const estadoAnterior = canje.estado;
-    canje.estado = estado;
-    const saved = await this.canjeRepository.save(canje);
+      const estadoAnterior = canje.estado;
+
+      if (estado === EstadoCanje.CANCELADO) {
+        if (estadoAnterior === EstadoCanje.CANCELADO) {
+          throw new BadRequestException('Este canje ya está cancelado');
+        }
+
+        const curso = await manager.findOne(Curso, {
+          where: { id: canje.curso.id },
+          lock: { mode: 'pessimistic_write' },
+        });
+        if (curso) {
+          curso.puntos += canje.puntos_gastados;
+          await manager.save(curso);
+
+          await manager.save(
+            manager.create(HistorialPuntos, {
+              curso,
+              tipo: TipoTransaccion.SUMA,
+              puntos: canje.puntos_gastados,
+              descripcion: `Reverso por cancelación de canje: ${canje.premio?.nombre ?? ''}`,
+            }),
+          );
+        }
+
+        const premio = await manager.findOne(Premio, {
+          where: { id: canje.premio.id },
+          lock: { mode: 'pessimistic_write' },
+        });
+        if (premio) {
+          premio.stock += 1;
+          await manager.save(premio);
+        }
+      }
+
+      canje.estado = estado;
+      const saved = await manager.save(canje);
+      return { saved, estadoAnterior };
+    });
 
     try {
       await this.auditoriaService.registrar({

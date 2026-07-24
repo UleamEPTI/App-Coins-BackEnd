@@ -31,13 +31,16 @@ let SolicitudesPasswordService = class SolicitudesPasswordService {
         this.solicitudRepository = solicitudRepository;
         this.usuarioRepository = usuarioRepository;
     }
-    async cambiarPasswordDirecto(usuarioObjetivoId, nuevaPassword, solicitanteId) {
+    async cambiarPasswordDirecto(usuarioObjetivoId, nuevaPassword, solicitanteId, solicitanteRol, solicitanteInstitucionId) {
         const usuario = await this.usuarioRepository.findOne({
             where: { id: usuarioObjetivoId },
             relations: ['rol'],
         });
         if (!usuario)
             throw new common_1.NotFoundException('Usuario no encontrado');
+        if (solicitanteRol && solicitanteRol !== 'ADMIN' && usuario.institucion_id !== solicitanteInstitucionId) {
+            throw new common_1.ForbiddenException('No tienes permiso para cambiar la contraseña de este usuario');
+        }
         const hash = await bcrypt.hash(nuevaPassword, 10);
         usuario.password_hash = hash;
         await this.usuarioRepository.save(usuario);

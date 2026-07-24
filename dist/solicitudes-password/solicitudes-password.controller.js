@@ -21,13 +21,14 @@ const roles_decorator_1 = require("../auth/decorators/roles.decorator");
 const solicitudes_password_service_1 = require("./solicitudes-password.service");
 const create_solicitud_dto_1 = require("./dto/create-solicitud.dto");
 const atender_solicitud_dto_1 = require("./dto/atender-solicitud.dto");
+const cambiar_password_directo_dto_1 = require("./dto/cambiar-password-directo.dto");
 let SolicitudesPasswordController = class SolicitudesPasswordController {
     service;
     constructor(service) {
         this.service = service;
     }
-    cambiarDirecto(usuario_id, nueva_password, req) {
-        return this.service.cambiarPasswordDirecto(usuario_id, nueva_password, req.user.id);
+    cambiarDirecto(usuario_id, dto, req) {
+        return this.service.cambiarPasswordDirecto(usuario_id, dto.nueva_password, req.user.id, req.user.rol, req.user.institucion_id);
     }
     solicitar(dto, req) {
         return this.service.crearSolicitud(dto, req.user.id);
@@ -48,10 +49,10 @@ __decorate([
     (0, common_1.Post)('cambio-directo/:usuario_id'),
     (0, swagger_1.ApiOperation)({ summary: 'INSTITUCION/ADMIN cambia contraseña directamente' }),
     __param(0, (0, common_1.Param)('usuario_id', common_1.ParseUUIDPipe)),
-    __param(1, (0, common_1.Body)('nueva_password')),
+    __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:paramtypes", [String, cambiar_password_directo_dto_1.CambiarPasswordDirectoDto, Object]),
     __metadata("design:returntype", void 0)
 ], SolicitudesPasswordController.prototype, "cambiarDirecto", null);
 __decorate([

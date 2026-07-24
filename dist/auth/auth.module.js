@@ -25,10 +25,16 @@ exports.AuthModule = AuthModule = __decorate([
             passport_1.PassportModule,
             jwt_1.JwtModule.registerAsync({
                 imports: [config_1.ConfigModule],
-                useFactory: (configService) => ({
-                    secret: configService.get('JWT_SECRET') ?? 'secret',
-                    signOptions: { expiresIn: '24h' },
-                }),
+                useFactory: (configService) => {
+                    const secret = configService.get('JWT_SECRET');
+                    if (!secret) {
+                        throw new Error('JWT_SECRET no está configurado. Define esta variable de entorno antes de arrancar el servidor (revisa el archivo .env).');
+                    }
+                    return {
+                        secret,
+                        signOptions: { expiresIn: '24h' },
+                    };
+                },
                 inject: [config_1.ConfigService],
             }),
         ],

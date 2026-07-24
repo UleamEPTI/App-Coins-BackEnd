@@ -7,7 +7,7 @@ export declare class SolicitudesPasswordService {
     private readonly solicitudRepository;
     private readonly usuarioRepository;
     constructor(solicitudRepository: Repository<SolicitudPassword>, usuarioRepository: Repository<Usuario>);
-    cambiarPasswordDirecto(usuarioObjetivoId: string, nuevaPassword: string, solicitanteId: string): Promise<{
+    cambiarPasswordDirecto(usuarioObjetivoId: string, nuevaPassword: string, solicitanteId: string, solicitanteRol?: string, solicitanteInstitucionId?: string | null): Promise<{
         message: string;
     }>;
     crearSolicitud(dto: CreateSolicitudDto, solicitanteId: string): Promise<SolicitudPassword>;

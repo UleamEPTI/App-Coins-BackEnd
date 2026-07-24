@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Curso } from '../cursos/entities/curso.entity';
 import { Reciclaje } from '../reciclajes/entities/reciclaje.entity';
+// NUEVO: para consultar el nombre real de la institución y ponerlo en el título del reporte.
+import { Institucion } from '../instituciones/entities/institucion.entity';
 // COMENTADO: antes usaba Estudiante y Canje, ahora usa Curso.
 // import { Estudiante } from '../estudiantes/entities/estudiante.entity';
 // import { Canje } from '../canjes/entities/canje.entity';
@@ -46,6 +48,9 @@ export class ReportesService {
     private readonly cursoRepository: Repository<Curso>,
     @InjectRepository(Reciclaje)
     private readonly reciclajeRepository: Repository<Reciclaje>,
+    // NUEVO: para consultar el nombre real de la institución.
+    @InjectRepository(Institucion)
+    private readonly institucionRepository: Repository<Institucion>,
     // COMENTADO: canjeRepository no se usaba realmente en la generación del PDF.
     // @InjectRepository(Canje)
     // private readonly canjeRepository: Repository<Canje>,
@@ -61,6 +66,12 @@ export class ReportesService {
     if (usuarioRol && usuarioRol !== 'ADMIN' && institucion_id !== usuarioInstitucionId) {
       throw new ForbiddenException('No tienes permiso para generar el reporte de esta institución');
     }
+
+    // NUEVO: se consulta la institución para poner su nombre real en el
+    // título del reporte (antes decía genéricamente "Reporte de Institución",
+    // sin indicar de cuál institución se trataba).
+    const institucion = await this.institucionRepository.findOne({ where: { id: institucion_id } });
+    if (!institucion) throw new NotFoundException(`Institución ${institucion_id} no encontrada`);
 
     // COMENTADO (versión anterior, por estudiante):
     // const estudiantes = await this.estudianteRepository
@@ -108,7 +119,7 @@ export class ReportesService {
     // });
 
     return this.generarPDF({
-      titulo: 'Reporte de Institución',
+      titulo: `Reporte de Institución: ${institucion.nombre}`,
       periodo,
       // COMENTADO: totalEstudiantes: estudiantes.length,
       totalCursos: cursos.length,

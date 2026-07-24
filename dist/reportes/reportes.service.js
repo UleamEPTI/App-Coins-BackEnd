@@ -30,7 +30,7 @@ function fechaInicioPeriodo(periodo) {
     }
     if (periodo === 'mes') {
         const inicio = new Date(ahora);
-        inicio.setMonth(ahora.getMonth() - 1);
+        inicio.setDate(ahora.getDate() - 30);
         return inicio;
     }
     const inicio = new Date(ahora);
@@ -128,18 +128,28 @@ let ReportesService = class ReportesService {
             doc.moveDown();
             doc.fontSize(14).font('Helvetica-Bold').text('Detalle por Curso');
             doc.moveDown(0.5);
-            doc.fontSize(11).font('Helvetica-Bold');
-            doc.text('#', 50, doc.y, { continued: true, width: 40 });
-            doc.text('Curso', { continued: true, width: 300 });
-            doc.text('Puntos', { width: 100 });
-            doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
-            doc.moveDown(0.3);
-            doc.font('Helvetica').fontSize(10);
+            const colX = { pos: 50, curso: 90, puntos: 460 };
+            const colWidth = { pos: 40, curso: 350, puntos: 80 };
+            const rowHeight = 20;
+            const dibujarFila = (y, pos, curso, puntos, bold = false) => {
+                doc.font(bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(bold ? 11 : 10);
+                doc.text(pos, colX.pos, y, { width: colWidth.pos });
+                doc.text(curso, colX.curso, y, { width: colWidth.curso });
+                doc.text(puntos, colX.puntos, y, { width: colWidth.puntos, align: 'right' });
+            };
+            let y = doc.y;
+            dibujarFila(y, '#', 'Curso', 'Puntos', true);
+            y += rowHeight;
+            doc.moveTo(50, y - 4).lineTo(550, y - 4).stroke();
             data.cursos.forEach(c => {
-                doc.text(`${c.posicion}`, 50, doc.y, { continued: true, width: 40 });
-                doc.text(c.nombre, { continued: true, width: 300 });
-                doc.text(`${c.puntos}`, { width: 100 });
+                if (y > doc.page.height - doc.page.margins.bottom - rowHeight) {
+                    doc.addPage();
+                    y = doc.page.margins.top;
+                }
+                dibujarFila(y, `${c.posicion}`, c.nombre, `${c.puntos}`);
+                y += rowHeight;
             });
+            doc.y = y;
             doc.end();
         });
     }

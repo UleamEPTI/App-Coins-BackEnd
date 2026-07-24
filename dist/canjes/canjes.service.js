@@ -123,15 +123,46 @@ let CanjesService = class CanjesService {
         });
     }
     async actualizarEstado(id, estado, usuarioId, usuarioEmail, ip) {
-        const canje = await this.canjeRepository.findOne({
-            where: { id },
-            relations: ['curso', 'premio'],
+        const { saved, estadoAnterior } = await this.dataSource.transaction(async (manager) => {
+            const canje = await manager.findOne(canje_entity_1.Canje, {
+                where: { id },
+                relations: ['curso', 'premio'],
+                lock: { mode: 'pessimistic_write' },
+            });
+            if (!canje)
+                throw new common_1.NotFoundException(`Canje ${id} no encontrado`);
+            const estadoAnterior = canje.estado;
+            if (estado === canje_entity_1.EstadoCanje.CANCELADO) {
+                if (estadoAnterior === canje_entity_1.EstadoCanje.CANCELADO) {
+                    throw new common_1.BadRequestException('Este canje ya está cancelado');
+                }
+                const curso = await manager.findOne(curso_entity_1.Curso, {
+                    where: { id: canje.curso.id },
+                    lock: { mode: 'pessimistic_write' },
+                });
+                if (curso) {
+                    curso.puntos += canje.puntos_gastados;
+                    await manager.save(curso);
+                    await manager.save(manager.create(historial_puntos_entity_1.HistorialPuntos, {
+                        curso,
+                        tipo: historial_puntos_entity_1.TipoTransaccion.SUMA,
+                        puntos: canje.puntos_gastados,
+                        descripcion: `Reverso por cancelación de canje: ${canje.premio?.nombre ?? ''}`,
+                    }));
+                }
+                const premio = await manager.findOne(premio_entity_1.Premio, {
+                    where: { id: canje.premio.id },
+                    lock: { mode: 'pessimistic_write' },
+                });
+                if (premio) {
+                    premio.stock += 1;
+                    await manager.save(premio);
+                }
+            }
+            canje.estado = estado;
+            const saved = await manager.save(canje);
+            return { saved, estadoAnterior };
         });
-        if (!canje)
-            throw new common_1.NotFoundException(`Canje ${id} no encontrado`);
-        const estadoAnterior = canje.estado;
-        canje.estado = estado;
-        const saved = await this.canjeRepository.save(canje);
         try {
             await this.auditoriaService.registrar({
                 tabla: 'canjes',

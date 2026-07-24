@@ -21,8 +21,14 @@ function fechaInicioPeriodo(periodo?: PeriodoReporte): Date | null {
     return inicio;
   }
   if (periodo === 'mes') {
+    // FIX: antes usaba `setMonth(ahora.getMonth() - 1)`, que en JavaScript
+    // se desborda cuando el día actual no existe en el mes anterior (ej:
+    // 31 de marzo - 1 mes debería dar ~28 de febrero, pero setMonth
+    // desborda hacia el 3 de marzo). Eso recortaba silenciosamente el
+    // rango de "último mes" a menos de un mes real. Se usa resta de días
+    // fijos, igual que 'semana', para evitar el problema de calendario.
     const inicio = new Date(ahora);
-    inicio.setMonth(ahora.getMonth() - 1);
+    inicio.setDate(ahora.getDate() - 30);
     return inicio;
   }
   const inicio = new Date(ahora);
@@ -249,33 +255,43 @@ export class ReportesService {
       doc.fontSize(14).font('Helvetica-Bold').text('Detalle por Curso');
       doc.moveDown(0.5);
 
-      doc.fontSize(11).font('Helvetica-Bold');
-      doc.text('#', 50, doc.y, { continued: true, width: 40 });
-      // COMENTADO: encabezado anterior tenía Nombre/Curso/Código/Puntos.
-      // doc.text('Nombre', { continued: true, width: 180 });
-      // if (data.estudiantes[0]?.curso !== undefined) {
-      //   doc.text('Curso', { continued: true, width: 120 });
-      // }
-      // doc.text('Código', { continued: true, width: 100 });
-      doc.text('Curso', { continued: true, width: 300 });
-      doc.text('Puntos', { width: 100 });
+      // FIX: antes se armaban las columnas con `continued: true` sin fijar
+      // x/y explícito en cada celda. pdfkit no usa el `width` de un texto
+      // en modo continued para "avanzar" el cursor a una columna fija —
+      // solo lo usa para decidir cuándo hacer salto de línea dentro de
+      // ese mismo texto. Con textos cortos (como "1" o nombres de curso
+      // cortos) el cursor no avanzaba lo suficiente y las columnas
+      // terminaban montadas unas sobre otras (se veía todo apilado en el
+      // PDF en vez de en columnas). La solución: fijar x e y de forma
+      // explícita para cada celda de la fila, sin encadenar con `continued`.
+      const colX = { pos: 50, curso: 90, puntos: 460 };
+      const colWidth = { pos: 40, curso: 350, puntos: 80 };
+      const rowHeight = 20;
 
-      doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
-      doc.moveDown(0.3);
+      const dibujarFila = (y: number, pos: string, curso: string, puntos: string, bold = false) => {
+        doc.font(bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(bold ? 11 : 10);
+        doc.text(pos, colX.pos, y, { width: colWidth.pos });
+        doc.text(curso, colX.curso, y, { width: colWidth.curso });
+        doc.text(puntos, colX.puntos, y, { width: colWidth.puntos, align: 'right' });
+      };
+
+      let y = doc.y;
+      dibujarFila(y, '#', 'Curso', 'Puntos', true);
+      y += rowHeight;
+      doc.moveTo(50, y - 4).lineTo(550, y - 4).stroke();
 
       // Filas
-      doc.font('Helvetica').fontSize(10);
       data.cursos.forEach(c => {
-        doc.text(`${c.posicion}`, 50, doc.y, { continued: true, width: 40 });
-        // COMENTADO: filas anteriores mostraban nombre/curso/código de estudiante.
-        // doc.text(e.nombre, { continued: true, width: 180 });
-        // if (e.curso !== undefined) {
-        //   doc.text(e.curso, { continued: true, width: 120 });
-        // }
-        // doc.text(e.codigo, { continued: true, width: 100 });
-        doc.text(c.nombre, { continued: true, width: 300 });
-        doc.text(`${c.puntos}`, { width: 100 });
+        // Salto de página si ya no cabe otra fila
+        if (y > doc.page.height - doc.page.margins.bottom - rowHeight) {
+          doc.addPage();
+          y = doc.page.margins.top;
+        }
+        dibujarFila(y, `${c.posicion}`, c.nombre, `${c.puntos}`);
+        y += rowHeight;
       });
+
+      doc.y = y;
 
       doc.end();
     });

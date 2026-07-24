@@ -225,84 +225,332 @@ export class ReportesService {
     cursos: { posicion: number; nombre: string; puntos: number }[];
   }): Promise<Buffer> {
     return new Promise((resolve, reject) => {
-      const doc = new PDFDocument({ margin: 50 });
+      const doc = new PDFDocument({ margin: 48, bufferPages: true });
       const chunks: Buffer[] = [];
 
       doc.on('data', chunk => chunks.push(chunk));
       doc.on('end', () => resolve(Buffer.concat(chunks)));
       doc.on('error', reject);
 
-      const periodoTexto = { semana: 'Última semana', mes: 'Último mes', anio: 'Último año' };
-
-      // Título
-      doc.fontSize(20).font('Helvetica-Bold').text(data.titulo, { align: 'center' });
-      doc.fontSize(11).font('Helvetica').text(`Fecha: ${new Date().toLocaleDateString('es-EC')}`, { align: 'center' });
-      if (data.periodo) {
-        doc.text(`Periodo: ${periodoTexto[data.periodo]}`, { align: 'center' });
-      }
-      doc.moveDown();
-
-      // Resumen
-      doc.fontSize(14).font('Helvetica-Bold').text('Resumen General');
-      doc.moveDown(0.5);
-      doc.fontSize(11).font('Helvetica');
-      // COMENTADO: doc.text(`Total Estudiantes: ${data.totalEstudiantes}`);
-      doc.text(`Total Cursos: ${data.totalCursos}`);
-      // COMENTADO: doc.text(`Total Botellas Recicladas: ${data.totalBotellas}`);
-      doc.text(`Total Kilos Reciclados: ${data.totalKilos}`);
-      doc.text(`Total Puntos Generados: ${data.totalPuntos}`);
-      doc.moveDown();
-
-      // COMENTADO: bloque de "Botellas por Tipo", ya no aplica.
-      // doc.fontSize(14).font('Helvetica-Bold').text('Botellas por Tipo');
-      // doc.moveDown(0.5);
-      // doc.fontSize(11).font('Helvetica');
-      // Object.entries(data.botellaPorTipo).forEach(([tamano, cantidad]) => {
-      //   doc.text(`${tamano}: ${cantidad} botellas`);
-      // });
-      // doc.moveDown();
-
-      // Tabla de cursos (antes era "Ranking de Estudiantes")
-      doc.fontSize(14).font('Helvetica-Bold').text('Detalle por Curso');
-      doc.moveDown(0.5);
-
-      // FIX: antes se armaban las columnas con `continued: true` sin fijar
-      // x/y explícito en cada celda. pdfkit no usa el `width` de un texto
-      // en modo continued para "avanzar" el cursor a una columna fija —
-      // solo lo usa para decidir cuándo hacer salto de línea dentro de
-      // ese mismo texto. Con textos cortos (como "1" o nombres de curso
-      // cortos) el cursor no avanzaba lo suficiente y las columnas
-      // terminaban montadas unas sobre otras (se veía todo apilado en el
-      // PDF en vez de en columnas). La solución: fijar x e y de forma
-      // explícita para cada celda de la fila, sin encadenar con `continued`.
-      const colX = { pos: 50, curso: 90, puntos: 460 };
-      const colWidth = { pos: 40, curso: 350, puntos: 80 };
-      const rowHeight = 20;
-
-      const dibujarFila = (y: number, pos: string, curso: string, puntos: string, bold = false) => {
-        doc.font(bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(bold ? 11 : 10);
-        doc.text(pos, colX.pos, y, { width: colWidth.pos });
-        doc.text(curso, colX.curso, y, { width: colWidth.curso });
-        doc.text(puntos, colX.puntos, y, { width: colWidth.puntos, align: 'right' });
+      // La composición visual vive en este método: no cambia consultas,
+      // filtros ni la información que entrega cada reporte.
+      const COLOR = {
+        fondo: '#F6F9F6',
+        superficie: '#FFFFFF',
+        verdeProfundo: '#123D27',
+        verde: '#1D7042',
+        verdeClaro: '#E8F4EA',
+        lima: '#87B93D',
+        dorado: '#D99C2B',
+        texto: '#193025',
+        textoSuave: '#65756A',
+        borde: '#D8E5DA',
+        fila: '#FBFDFC',
       };
 
-      let y = doc.y;
-      dibujarFila(y, '#', 'Curso', 'Puntos', true);
-      y += rowHeight;
-      doc.moveTo(50, y - 4).lineTo(550, y - 4).stroke();
+      const pageWidth = doc.page.width;
+      const pageHeight = doc.page.height;
+      const marginX = 48;
+      const contentWidth = pageWidth - marginX * 2;
+      const footerY = pageHeight - 38;
+      const periodoTexto = { semana: 'Última semana', mes: 'Último mes', anio: 'Último año' };
+      const fechaEmision = new Date().toLocaleDateString('es-EC', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+      });
+      const formatearNumero = (valor: number, decimales = 0) =>
+        new Intl.NumberFormat('es-EC', {
+          maximumFractionDigits: decimales,
+          minimumFractionDigits: 0,
+        }).format(Number.isFinite(Number(valor)) ? Number(valor) : 0);
 
-      // Filas
-      data.cursos.forEach(c => {
-        // Salto de página si ya no cabe otra fila
-        if (y > doc.page.height - doc.page.margins.bottom - rowHeight) {
+      const dibujarFondo = () => {
+        doc.save();
+        doc.rect(0, 0, pageWidth, pageHeight).fill(COLOR.fondo);
+        doc.restore();
+      };
+
+      const dibujarEncabezadoPrincipal = () => {
+        dibujarFondo();
+        doc.rect(0, 0, pageWidth, 158).fill(COLOR.verdeProfundo);
+        doc.save();
+        doc.fillOpacity(0.1);
+        doc.circle(pageWidth - 16, 12, 102).fill('#FFFFFF');
+        doc.circle(pageWidth - 92, 138, 70).fill('#FFFFFF');
+        doc.restore();
+
+        doc.circle(marginX + 5, 26, 5).fill(COLOR.lima);
+        doc
+          .fillColor('#FFFFFF')
+          .font('Helvetica-Bold')
+          .fontSize(9)
+          .text('APP COINS', marginX + 18, 20, { characterSpacing: 1.3 });
+        doc
+          .fillColor('#BBD8C1')
+          .font('Helvetica')
+          .fontSize(8)
+          .text('REPORTE DE RECICLAJE', marginX + 18, 34, { characterSpacing: 0.7 });
+
+        const tamanoTitulo = data.titulo.length > 48 ? 17 : data.titulo.length > 36 ? 19 : 22;
+        doc
+          .fillColor('#FFFFFF')
+          .font('Helvetica-Bold')
+          .fontSize(tamanoTitulo)
+          .text(data.titulo, marginX, 59, {
+            width: contentWidth,
+            height: 42,
+            ellipsis: true,
+            lineGap: 0,
+          });
+
+        const periodo = data.periodo ? periodoTexto[data.periodo] : 'Histórico completo';
+        const metadatos = 'Emitido el ' + fechaEmision + '  ·  ' + periodo;
+        doc.save();
+        doc.fillOpacity(0.14);
+        doc.roundedRect(marginX, 119, Math.min(contentWidth, 330), 23, 11).fill('#FFFFFF');
+        doc.restore();
+        doc
+          .fillColor('#E6F2E8')
+          .font('Helvetica')
+          .fontSize(8.5)
+          .text(metadatos, marginX + 12, 126, { width: Math.min(contentWidth, 306) });
+        doc.rect(0, 153, pageWidth, 5).fill(COLOR.lima);
+      };
+
+      const dibujarEncabezadoContinuacion = () => {
+        dibujarFondo();
+        doc.rect(0, 0, pageWidth, 6).fill(COLOR.lima);
+        doc.circle(marginX + 5, 28, 4).fill(COLOR.verde);
+        doc
+          .fillColor(COLOR.verdeProfundo)
+          .font('Helvetica-Bold')
+          .fontSize(9)
+          .text('APP COINS', marginX + 16, 22, { characterSpacing: 1.1 });
+        doc
+          .fillColor(COLOR.textoSuave)
+          .font('Helvetica')
+          .fontSize(8.5)
+          .text('Detalle por curso · continuación', marginX, 43);
+        doc.moveTo(marginX, 58).lineTo(pageWidth - marginX, 58).lineWidth(0.7).stroke(COLOR.borde);
+      };
+
+      const dibujarTarjeta = (
+        x: number,
+        y: number,
+        ancho: number,
+        colorAcento: string,
+        etiqueta: string,
+        valor: string,
+        detalle: string,
+      ) => {
+        const alto = 84;
+        doc.roundedRect(x, y, ancho, alto, 9).fillAndStroke(COLOR.superficie, COLOR.borde);
+        doc.roundedRect(x, y, ancho, 5, 8).fill(colorAcento);
+        doc
+          .fillColor(COLOR.textoSuave)
+          .font('Helvetica-Bold')
+          .fontSize(7.5)
+          .text(etiqueta.toUpperCase(), x + 15, y + 19, {
+            width: ancho - 30,
+            align: 'center',
+            characterSpacing: 0.6,
+          });
+        doc
+          .fillColor(COLOR.texto)
+          .font('Helvetica-Bold')
+          .fontSize(20)
+          .text(valor, x + 12, y + 35, { width: ancho - 24, align: 'center', ellipsis: true });
+        doc
+          .fillColor(COLOR.textoSuave)
+          .font('Helvetica')
+          .fontSize(8)
+          .text(detalle, x + 12, y + 62, { width: ancho - 24, align: 'center', ellipsis: true });
+      };
+
+      const tableX = marginX;
+      const numeroWidth = 46;
+      const puntosWidth = 116;
+      const nombreX = tableX + numeroWidth + 12;
+      const nombreWidth = contentWidth - numeroWidth - puntosWidth - 30;
+      const tableHeaderHeight = 31;
+
+      const dibujarCabeceraTabla = (y: number) => {
+        doc.roundedRect(tableX, y, contentWidth, tableHeaderHeight, 7).fill(COLOR.verdeProfundo);
+        doc.font('Helvetica-Bold').fontSize(8.5).fillColor('#FFFFFF');
+        doc.text('N.º', tableX + 14, y + 11, { width: numeroWidth - 14 });
+        doc.text('CURSO', nombreX, y + 11, { width: nombreWidth, characterSpacing: 0.5 });
+        doc.text('PUNTOS ACUMULADOS', tableX + contentWidth - puntosWidth, y + 11, {
+          width: puntosWidth - 13,
+          align: 'right',
+          characterSpacing: 0.25,
+        });
+      };
+
+      const dibujarFila = (y: number, posicion: number, nombre: string, puntos: number, alto: number, alterna: boolean) => {
+        doc.rect(tableX, y, contentWidth, alto).fill(alterna ? COLOR.fila : COLOR.superficie);
+        doc.moveTo(tableX, y + alto).lineTo(tableX + contentWidth, y + alto).lineWidth(0.55).stroke(COLOR.borde);
+
+        const insigniaY = y + alto / 2 - 10;
+        doc.circle(tableX + 22, insigniaY + 10, 10).fill(COLOR.verdeClaro);
+        doc
+          .fillColor(COLOR.verde)
+          .font('Helvetica-Bold')
+          .fontSize(8.5)
+          .text(String(posicion), tableX + 12, insigniaY + 6.5, { width: 20, align: 'center' });
+        doc
+          .fillColor(COLOR.texto)
+          .font('Helvetica')
+          .fontSize(10)
+          .text(nombre || 'Curso sin nombre', nombreX, y + 12, {
+            width: nombreWidth,
+            height: Math.max(16, alto - 20),
+            ellipsis: true,
+            lineGap: 1,
+          });
+
+        const chipWidth = 76;
+        const chipX = tableX + contentWidth - chipWidth - 14;
+        const chipY = y + alto / 2 - 11;
+        doc.roundedRect(chipX, chipY, chipWidth, 22, 11).fill(COLOR.verdeClaro);
+        doc
+          .fillColor(COLOR.verdeProfundo)
+          .font('Helvetica-Bold')
+          .fontSize(9)
+          .text(formatearNumero(puntos), chipX, chipY + 6.5, {
+            width: chipWidth,
+            align: 'center',
+            ellipsis: true,
+          });
+      };
+
+      dibujarEncabezadoPrincipal();
+
+      const resumenY = 183;
+      doc.rect(marginX, resumenY + 3, 4, 18).fill(COLOR.lima);
+      doc
+        .fillColor(COLOR.texto)
+        .font('Helvetica-Bold')
+        .fontSize(14)
+        .text('Resumen general', marginX + 13, resumenY);
+      doc
+        .fillColor(COLOR.textoSuave)
+        .font('Helvetica')
+        .fontSize(8.5)
+        .text('Indicadores consolidados del reporte', marginX + 13, resumenY + 18);
+
+      const gap = 12;
+      const cardWidth = (contentWidth - gap * 2) / 3;
+      const cardY = 231;
+      dibujarTarjeta(
+        marginX,
+        cardY,
+        cardWidth,
+        COLOR.verde,
+        'Cursos incluidos',
+        formatearNumero(data.totalCursos),
+        'en el presente reporte',
+      );
+      dibujarTarjeta(
+        marginX + cardWidth + gap,
+        cardY,
+        cardWidth,
+        COLOR.lima,
+        'Kilos reciclados',
+        formatearNumero(data.totalKilos, 2) + ' kg',
+        'peso registrado en el período',
+      );
+      dibujarTarjeta(
+        marginX + (cardWidth + gap) * 2,
+        cardY,
+        cardWidth,
+        COLOR.dorado,
+        'Puntos generados',
+        formatearNumero(data.totalPuntos),
+        'puntos obtenidos en el período',
+      );
+
+      let y = cardY + 116;
+      doc.rect(marginX, y + 3, 4, 18).fill(COLOR.lima);
+      doc.fillColor(COLOR.texto).font('Helvetica-Bold').fontSize(14).text('Detalle por curso', marginX + 13, y);
+      doc
+        .fillColor(COLOR.textoSuave)
+        .font('Helvetica')
+        .fontSize(8.5)
+        .text(
+          formatearNumero(data.cursos.length) + ' curso' + (data.cursos.length === 1 ? '' : 's') + ' en el listado',
+          marginX + 13,
+          y + 18,
+        );
+      y += 39;
+      dibujarCabeceraTabla(y);
+      y += tableHeaderHeight;
+
+      if (data.cursos.length === 0) {
+        const emptyHeight = 86;
+        doc.roundedRect(tableX, y, contentWidth, emptyHeight, 8).fillAndStroke(COLOR.superficie, COLOR.borde);
+        doc.circle(tableX + 38, y + emptyHeight / 2, 18).fill(COLOR.verdeClaro);
+        doc
+          .fillColor(COLOR.verde)
+          .font('Helvetica-Bold')
+          .fontSize(17)
+          .text('—', tableX + 27, y + emptyHeight / 2 - 10, { width: 22, align: 'center' });
+        doc
+          .font('Helvetica-Bold')
+          .fontSize(10.5)
+          .fillColor(COLOR.textoSuave)
+          .text('No hay cursos registrados para este reporte.', tableX + 70, y + 27, { width: contentWidth - 90 });
+        doc
+          .font('Helvetica')
+          .fontSize(8.5)
+          .fillColor(COLOR.textoSuave)
+          .text('Cuando existan registros, aparecerán organizados en este espacio.', tableX + 70, y + 45, {
+            width: contentWidth - 90,
+          });
+        y += emptyHeight;
+      }
+
+      data.cursos.forEach((c, i) => {
+        doc.font('Helvetica').fontSize(10);
+        const altoTexto = Math.min(
+          36,
+          doc.heightOfString(c.nombre || 'Curso sin nombre', { width: nombreWidth, lineGap: 1 }),
+        );
+        const altoFila = Math.max(42, Math.ceil(altoTexto) + 20);
+        if (y + altoFila > footerY - 12) {
           doc.addPage();
-          y = doc.page.margins.top;
+          dibujarEncabezadoContinuacion();
+          y = 77;
+          dibujarCabeceraTabla(y);
+          y += tableHeaderHeight;
         }
-        dibujarFila(y, `${c.posicion}`, c.nombre, `${c.puntos}`);
-        y += rowHeight;
+        dibujarFila(y, c.posicion, c.nombre, c.puntos, altoFila, i % 2 === 1);
+        y += altoFila;
       });
 
-      doc.y = y;
+      const range = doc.bufferedPageRange();
+      const margenInferiorOriginal = doc.page.margins.bottom;
+      for (let i = range.start; i < range.start + range.count; i++) {
+        doc.switchToPage(i);
+        doc.page.margins.bottom = 0;
+        doc.moveTo(marginX, footerY - 9).lineTo(pageWidth - marginX, footerY - 9).lineWidth(0.6).stroke(COLOR.borde);
+        doc
+          .font('Helvetica')
+          .fontSize(8)
+          .fillColor(COLOR.textoSuave)
+          .text('APP COINS  ·  REPORTE DE RECICLAJE', marginX, footerY, {
+            width: contentWidth / 2,
+          });
+        doc
+          .font('Helvetica')
+          .fontSize(8)
+          .fillColor(COLOR.textoSuave)
+          .text('Página ' + (i + 1) + ' de ' + range.count, marginX + contentWidth / 2, footerY, {
+            width: contentWidth / 2,
+            align: 'right',
+          });
+        doc.page.margins.bottom = margenInferiorOriginal;
+      }
 
       doc.end();
     });

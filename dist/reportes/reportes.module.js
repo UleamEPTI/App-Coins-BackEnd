@@ -11,6 +11,7 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const curso_entity_1 = require("../cursos/entities/curso.entity");
 const reciclaje_entity_1 = require("../reciclajes/entities/reciclaje.entity");
+const institucion_entity_1 = require("../instituciones/entities/institucion.entity");
 const reportes_service_1 = require("./reportes.service");
 const reportes_controller_1 = require("./reportes.controller");
 let ReportesModule = class ReportesModule {
@@ -18,7 +19,7 @@ let ReportesModule = class ReportesModule {
 exports.ReportesModule = ReportesModule;
 exports.ReportesModule = ReportesModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([curso_entity_1.Curso, reciclaje_entity_1.Reciclaje])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([curso_entity_1.Curso, reciclaje_entity_1.Reciclaje, institucion_entity_1.Institucion])],
         providers: [reportes_service_1.ReportesService],
         controllers: [reportes_controller_1.ReportesController],
     })
